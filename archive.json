@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2020-10-07T14:33:29.161399+00:00",
+  "timestamp": "2020-10-07T23:01:32.792143+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -6810,7 +6810,7 @@
       "id": "MDU6SXNzdWU2ODU3MTE1MDU=",
       "title": "Possible to simplify interaction with session resumption?",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/285",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "davidben",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [
@@ -6819,8 +6819,8 @@
       "labels": [],
       "body": "The current draft contains various rules around ECH and resumption.\r\n\r\n> Per {{client-behavior}} and {{server-behavior}}, implementations are required to track, alongside each PSK established by a previous connection, whether the connection negotiated this extension with the \"ech_accept\" response type. If so, this is referred to as an \"ECH PSK\". Otherwise, it is a \"non-ECH PSK\". This may be implemented by adding a new field to client and server session states.\r\n\r\n> When offering an encrypted ClientHello, the client MUST NOT offer to resume any non-ECH PSKs.\r\n\r\n> If the server resumed a session or negotiated a session that did not use a certificate for authentication, the client MUST abort the connection with an \"illegal_parameter\" alert. This case is invalid because {{send-ech}} requires the client to only offer ECH-established sessions, and {{server-behavior}} requires the server to decline ECH-established sessions if it did not accept ECH.\r\n\r\n> The server MUST ignore all PSK identities in the ClientHello which correspond to ECH PSKs. ECH PSKs offered by the client are associated with the ECH name. The server was unable to decrypt then ECH name, so it should not resume them when using the plaintext SNI name. This restriction allows a client to reject resumptions in {{auth-public-name}}.\r\n\r\n> If the server sends a NewSessionTicket message, the corresponding ECH PSK MUST be ignored by all other servers in the deployment when not negotiating ECH, including servers which do not implement this specification.\r\n\r\nThese rules date to before we started encrypting the entire ClientHello and were intended to avoid mixing up session resumptions between the public and private name, since the same pre_shared_key extension was used for both, and amount to saying implementations must add a boolean to their session state.\r\n\r\nNow that the public and private names correspond to different ClientHellos altogether, the client can (and should) only send inner name tickets in the inner ClientHello and outer name tickets in the outer ClientHello. (#270) I suspect that means we no longer need further ECH special cases here.",
       "createdAt": "2020-08-25T18:52:10Z",
-      "updatedAt": "2020-09-22T22:33:46Z",
-      "closedAt": null,
+      "updatedAt": "2020-10-07T23:00:44Z",
+      "closedAt": "2020-10-07T23:00:44Z",
       "comments": [
         {
           "author": "chris-wood",
@@ -7326,15 +7326,15 @@
       "id": "MDU6SXNzdWU3MDY2ODMzODU=",
       "title": "Add note on network/transport failure probability and ECH confirmation collision",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/307",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "chris-wood",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "See https://github.com/tlswg/draft-ietf-tls-esni/pull/287#discussion_r492802148.",
       "createdAt": "2020-09-22T20:49:24Z",
-      "updatedAt": "2020-09-22T20:49:24Z",
-      "closedAt": null,
+      "updatedAt": "2020-10-07T14:35:46Z",
+      "closedAt": "2020-10-07T14:35:46Z",
       "comments": []
     },
     {
@@ -7476,25 +7476,62 @@
       "labels": [],
       "body": "We previously decided not to bind the outer ClientHello to the ECH decryption, because doing so is rather a hassle. We'd need something similar to the TLS 1.3 PSK binder mess, with the added complexity of ordering relative to the PSK binders themselves. Additionally, while the binding helps with some of the don't stick out properties, there were other attacks on distinguishability anyway. So, instead, we mitigated the inner ClientHello malleability with OuterExtensions.inner_digest and left the outer ClientHello unbound.\r\n\r\nHowever, we've since decided not to allow PSKs in the outer ClientHello. Perhaps we should revisit this. Suppose the AD parameter to the ECH decryption were the entire outer ClientHello, minus the ECH extension. I believe this means we no longer need OuterExtensions.inner_digest. That would give an immediate 33-byte savings. It would then unlock a further 32 byte savings by amending #312 to say:\r\n\r\n* Client always encodes an empty legacy_session_id in ECH plaintext.\r\n* Client-facing server copies outer legacy_session_id to inner ClientHello as part of decompression.\r\n\r\n(The reason we can't do this easily right now is that, if the inner ClientHello lacks outer_extension, nothing's authenticating legacy_session_id. Since the field in TLS 1.3 is all but ignored, it's \"obvious\" that the malleability doesn't matter, but it's nicer to not need to think about such things.)\r\n\r\nFrom looking at Chrome's ClientHellos and working through what we'd send (drop 1.2-only extensions, compress most), it looks like the inner ClientHello will be maybe 130-140 bytes, plus a padded server_name. The 65 bytes above would almost halve the overhead.\r\n\r\nIn some sense what's going on here is our 16-byte tag on the AEAD in the ECH ciphertext is going to waste. We didn't authenticate everything that goes into reconstructing the inner ClientHello (outer_extensions), so instead we authenticate another hash (OuterExtensions.inner_digest) and check that afterwards. (To that end, if we do this, we probably need to say the server MUST reject encrypted_client_hello showing up in outer_extensions, that way all inputs to decompression are authenticated. Equivalently, decompression is done relative to the ECH-extension-less AD input rather than the original outer ClientHello.)",
       "createdAt": "2020-10-05T23:22:06Z",
-      "updatedAt": "2020-10-05T23:29:36Z",
+      "updatedAt": "2020-10-07T21:41:00Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I like this idea. How do you think the AD ought to be structured? The ClientHelloOuter, but with an an empty \"encrypted_client_hello\" extension?",
+          "createdAt": "2020-10-07T16:46:27Z",
+          "updatedAt": "2020-10-07T16:46:27Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Yeah, that's seems the simplest to me. Filling it with zeros, as @bemasc pointed out to me, requires predicting the length of the encrypted inner ClientHello. This isn't strictly impossible (ADs don't change ciphertext length), but it seems needlessly fussy and ECH is already requiring we be able re-encode ClientHellos, lengths and all.\r\n\r\nNote this assumes there are no computed PSK binders in the outer ClientHello because otherwise there's a circular dependency. (If we wanted to allow that, the AD would need to zero/trim the binders or so.)",
+          "createdAt": "2020-10-07T17:50:14Z",
+          "updatedAt": "2020-10-07T17:50:14Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Another benefit is it stops the attacker from probing information about compressed extensions. Currently an attacker can learn which extensions are compressed in the inner ClientHello by removing them from the outer ClientHello and seeing if the server still responds. This isn't a huge deal, as compressed extensions are assumed public, but this way we remove that vector and leave only the fuzzier signal from the ciphertext length.",
+          "createdAt": "2020-10-07T21:41:00Z",
+          "updatedAt": "2020-10-07T21:41:00Z"
+        }
+      ]
     },
     {
       "number": 324,
       "id": "MDU6SXNzdWU3MTUyNTk1NTM=",
       "title": "Clarify that CHInner ECH payload contents",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/324",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "chris-wood",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Unless I missed it, nowhere in the spec does it say that clients SHOULD/MUST send an empty ECH extension in CHInner (to trigger the confirmation signal). Should we add this?\r\n\r\ncc @davidben, @cjpatton",
       "createdAt": "2020-10-06T00:57:38Z",
-      "updatedAt": "2020-10-06T00:57:38Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2020-10-07T16:55:04Z",
+      "closedAt": "2020-10-07T16:55:04Z",
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "This is covered in Section 5: \r\n> When offering the \"encrypted_client_hello\" extension in its ClientHelloOuter, the client MUST also offer an empty \"encrypted_client_hello\" extension in its ClientHelloInner, wherever applicable. (This requirement is not applicable when the extension is generated as described in Section 6.4.)",
+          "createdAt": "2020-10-07T16:49:23Z",
+          "updatedAt": "2020-10-07T16:49:23Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Ah, thank you! Closing.",
+          "createdAt": "2020-10-07T16:55:04Z",
+          "updatedAt": "2020-10-07T16:55:04Z"
+        }
+      ]
     },
     {
       "number": 325,
@@ -7508,9 +7545,24 @@
       "labels": [],
       "body": "If a server implements ECH decryption via an RPC call, it's possible for the client's ECH keys to be valid for CH1 but invalid for CH2, perhaps due to a race condition that updates the server's keys across these messages. This should be exceedingly rare in practice, so failing the connection with an alert is probably fine, but we should probably be clear about this.\r\n\r\ncc @cjpatton ",
       "createdAt": "2020-10-06T00:59:13Z",
-      "updatedAt": "2020-10-06T00:59:13Z",
+      "updatedAt": "2020-10-07T17:40:48Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "There are two ways a accept-then-HRR-then-reject can happen:\r\n1. The client sends a `config_id` after HRR that differs from the `config_id` it sent before HRR.\r\n1. The `config_id` is the same, but the server no longer recognizes it.\r\n\r\nThe latter is the server's fault, and I think the only thing to do is abort with \"internal_error\". However, I think requiring that the `config_id` doesn't change is a good idea. I wonder if this is implied by the client behavior?\r\n\r\n> If the server sends a HelloRetryRequest in response to the ClientHello, the client sends a second updated ClientHello per the rules in [RFC8446]. However, at this point, the client does not know whether the server processed ClientHelloOuter or ClientHelloInner, and MUST regenerate both values to be acceptable. Note: if the inner and outer ClientHellos use different groups for their key shares or differ in some other way, then the HelloRetryRequest may actually be invalid for one or the other ClientHello, in which case a fresh ClientHello MUST be generated, ignoring the instructions in HelloRetryRequest. Otherwise, the usual rules for HelloRetryRequest processing apply.\r\n\r\nIn any case, I think we should have the server abort with \"illegal_parameter\" if the `config_id` changes over HRR.",
+          "createdAt": "2020-10-07T17:01:01Z",
+          "updatedAt": "2020-10-07T17:01:01Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Is this any different from, say, the server's cipher suite capabilities changing in between CH1 and CH2 and thus the server not being able to meet what they said with HRR?\r\n\r\nI guess I've always assumed that, within the context of a single \"handshake\" from the perspective of the client, we expect the server to behave self-consistently and, if it can't, I guess the server can internal_error and live with failing one or two connections across server restarts.",
+          "createdAt": "2020-10-07T17:40:48Z",
+          "updatedAt": "2020-10-07T17:40:48Z"
+        }
+      ]
     },
     {
       "number": 326,
@@ -7524,9 +7576,17 @@
       "labels": [],
       "body": "@davidben mentions possibly binding the outer CH to the ECH encryption in #323. If we don't do that, we should at least bind the encryption to the non-encrypted parts of the ECH extension (`config_if`, `suite`, and so on).\r\n\r\ncc @cjpatton ",
       "createdAt": "2020-10-06T01:00:24Z",
-      "updatedAt": "2020-10-06T01:00:24Z",
+      "updatedAt": "2020-10-07T16:48:02Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I also like this idea :) AD is cheap.",
+          "createdAt": "2020-10-07T16:48:01Z",
+          "updatedAt": "2020-10-07T16:48:01Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -26685,25 +26745,35 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NDk1ODYzNTg3",
       "title": "Simplify session resumption logic.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/317",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "chris-wood",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Closes #285.\r\n\r\nWe need to decide if we want to allow a GREASE+ticket distinguisher, and if not, how we GREASE the \"pre_shared_key\" extension in a meaningful way. The latter seems like somewhat of a cat and mouse game, so I'm not really enthusiastic about trying to specify that behavior, but I'd like to hear what others think.\r\n\r\ncc @davidben, @cjpatton, @martinthomson ",
       "createdAt": "2020-09-30T23:55:46Z",
-      "updatedAt": "2020-10-01T16:39:04Z",
+      "updatedAt": "2020-10-07T23:00:44Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
-      "baseRefOid": "e9c1bbd1acd13f1683f34fe0a51752da2c55cb6c",
+      "baseRefOid": "856b7fe98915102ceb7796dfec41cb1b627b8b9e",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "caw/simpler-resumption",
-      "headRefOid": "d8efb6e1ae82acdba74276667420006646ea97d9",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "headRefOid": "df683d4c0730ebab2e9a757664cd5e6ce9de274b",
+      "closedAt": "2020-10-07T23:00:44Z",
+      "mergedAt": "2020-10-07T23:00:44Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "e3a6b583b47c0907774bdb04d45df881270df17e"
+      },
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "This looks good. I still feel that there are a lot of ways that ECH usage might stick out, even to passive observers. \"pre_shared_key\" is one of many. If anything I would change the \"OPEN ISSUE\" to encompass top-to-bottom \"don't stick out\" review.",
+          "createdAt": "2020-10-07T17:07:12Z",
+          "updatedAt": "2020-10-07T17:07:12Z"
+        }
+      ],
       "reviews": [
         {
           "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NDk5OTI3MTM0",
@@ -26721,7 +26791,7 @@
               "originalPosition": 42,
               "body": "I suggest leaving this OPEN ISSUE open and address it post -08. This is one way that real ECH sticks out from covertext, but there are likely others. What is needed is a big picture \"don't stick out\" review of ECH.",
               "createdAt": "2020-10-01T00:09:18Z",
-              "updatedAt": "2020-10-01T16:04:13Z"
+              "updatedAt": "2020-10-07T15:34:38Z"
             }
           ]
         },
@@ -26741,7 +26811,7 @@
               "originalPosition": 65,
               "body": "nit: \"outer ClientHello\" -> \"the ClientHelloOuter\". Here and below.",
               "createdAt": "2020-10-01T00:10:28Z",
-              "updatedAt": "2020-10-01T16:04:13Z"
+              "updatedAt": "2020-10-07T15:34:38Z"
             }
           ]
         },
@@ -26761,7 +26831,7 @@
               "originalPosition": 68,
               "body": "Is \"ECH PSK\" an obsolete term?",
               "createdAt": "2020-10-01T00:11:07Z",
-              "updatedAt": "2020-10-01T16:04:13Z"
+              "updatedAt": "2020-10-07T15:34:38Z"
             }
           ]
         },
@@ -26781,7 +26851,7 @@
               "originalPosition": 68,
               "body": "We use it when noting tickets/PSKs associated with an ECH accepted connection.",
               "createdAt": "2020-10-01T00:21:54Z",
-              "updatedAt": "2020-10-01T16:04:13Z"
+              "updatedAt": "2020-10-07T15:34:38Z"
             }
           ]
         },
@@ -26801,7 +26871,7 @@
               "originalPosition": 65,
               "body": "I made this change more broadly.",
               "createdAt": "2020-10-01T00:22:04Z",
-              "updatedAt": "2020-10-01T16:04:13Z"
+              "updatedAt": "2020-10-07T15:34:38Z"
             }
           ]
         },
@@ -26821,7 +26891,7 @@
               "originalPosition": 42,
               "body": "I'm fine with that, I think, though we may want to reconsider it before the GREASE experiments commence.",
               "createdAt": "2020-10-01T00:22:28Z",
-              "updatedAt": "2020-10-01T16:04:13Z"
+              "updatedAt": "2020-10-07T15:34:38Z"
             }
           ]
         },
@@ -26841,7 +26911,7 @@
               "originalPosition": 38,
               "body": "(Noticed this while looking at the text for something else: the list below also has a reference to \"non-ECK PSK\" that should be dropped here.)",
               "createdAt": "2020-10-01T16:01:04Z",
-              "updatedAt": "2020-10-01T16:04:13Z"
+              "updatedAt": "2020-10-07T15:34:38Z"
             }
           ]
         },
@@ -26861,7 +26931,7 @@
               "originalPosition": 38,
               "body": "I explicitly kept that, but I don't really feel strongly about keeping it. So I just removed it. ",
               "createdAt": "2020-10-01T16:04:31Z",
-              "updatedAt": "2020-10-01T16:04:32Z"
+              "updatedAt": "2020-10-07T15:34:38Z"
             }
           ]
         },
@@ -26881,7 +26951,87 @@
               "originalPosition": 38,
               "body": "Hehe, I mean this PR removes the definition of \"ECH PSK\" and \"non-ECH PSK\" so we probably shouldn't reference them. :-) I was hoping we'd no longer have to associate this extra boolean with each session.",
               "createdAt": "2020-10-01T16:39:04Z",
-              "updatedAt": "2020-10-01T16:39:04Z"
+              "updatedAt": "2020-10-07T15:34:38Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA0Mjc5MjYz",
+          "commit": {
+            "abbreviatedOid": "df683d4"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "I think this looks good modulo the PSK oracle section seeming kinda odd to begin with.",
+          "createdAt": "2020-10-07T21:25:46Z",
+          "updatedAt": "2020-10-07T21:29:25Z",
+          "comments": [
+            {
+              "originalPosition": 123,
+              "body": "I think this section might be anchoring too much on PSKs. I think it's actually a general attack mitigated by a more general fix.\r\n\r\nBack when it was ESNI, the final ClientHello was malleable. An attacker could change some parameters while carrying over the secret server name. If the server interprets the influenced parameters differently based on the secret server name, the attacker can use that as an oracle. The most natural vector is the PSK, because resumptions may be SNI-partitioned. But if you have, say, different ALPN preferences by hostname, that would also equally be a vector.\r\n\r\nWe've fixed this by:\r\n1. Encrypting the entire ClientHello gives us a convenient way to bundle all parameters together, so it's natural that servers don't look at the outer CH. (The section talks about a server that mixes the two CHs up, which is totally bizarre.)\r\n2. Everything that goes into the final ClientHello is directly or indirectly authenticated by the AEAD. (OuterExtensions.inner_digest or #323.)\r\n\r\nI'll take a stab at a replacement for this section...",
+              "createdAt": "2020-10-07T21:25:46Z",
+              "updatedAt": "2020-10-07T22:24:03Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA0Mjk5MTUx",
+          "commit": {
+            "abbreviatedOid": "df683d4"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-07T22:02:30Z",
+          "updatedAt": "2020-10-07T22:02:31Z",
+          "comments": [
+            {
+              "originalPosition": 123,
+              "body": "> (The section talks about a server that mixes the two CHs up, which is totally bizarre.)\r\n\r\nIMO, this is why we kept the section. I agree that it's bizarre, but not much of a stretch from the original attack vector. I'd like to keep some mention of this mix-and-match problem for historical reasons, though I'm definitely happy to look at simpler text!",
+              "createdAt": "2020-10-07T22:02:30Z",
+              "updatedAt": "2020-10-07T22:02:31Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA0MzAxNTE2",
+          "commit": {
+            "abbreviatedOid": "df683d4"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-07T22:07:18Z",
+          "updatedAt": "2020-10-07T22:07:19Z",
+          "comments": [
+            {
+              "originalPosition": 123,
+              "body": "Dunno if it's simpler, but it's hopefully more general. I think the description of the mitigation should touch on OuterExtensions.inner_digest's role in authenticating the inner ClientHello, which would have answered #263. That is, if we allowed you to compress pre_shared_keys for whatever reason, this attack would still be impossible because of that hash.\r\n\r\n(Not that you'd want to compress pre_shared_key since a compressed is public and leaking the actual ticket gives you a different kind of oracle. That falls under \"things that depend on secret things are also secret\".)",
+              "createdAt": "2020-10-07T22:07:19Z",
+              "updatedAt": "2020-10-07T22:07:19Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA0MzA0NjUz",
+          "commit": {
+            "abbreviatedOid": "df683d4"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-07T22:13:47Z",
+          "updatedAt": "2020-10-07T22:13:47Z",
+          "comments": [
+            {
+              "originalPosition": 123,
+              "body": "https://github.com/tlswg/draft-ietf-tls-esni/pull/327",
+              "createdAt": "2020-10-07T22:13:47Z",
+              "updatedAt": "2020-10-07T22:13:47Z"
             }
           ]
         }
@@ -26892,26 +27042,42 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NDk1ODY3ODM4",
       "title": "Clarify our lack of concern around 2^{-64} acceptance signal collision probabilities",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/318",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "chris-wood",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Closes #307.\r\n\r\ncc @tfpauly, @martinthomson ",
       "createdAt": "2020-10-01T00:10:48Z",
-      "updatedAt": "2020-10-01T00:10:48Z",
+      "updatedAt": "2020-10-07T14:35:46Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "e9c1bbd1acd13f1683f34fe0a51752da2c55cb6c",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "caw/negligible",
       "headRefOid": "278603817d14ff6391058ae76e88063d366834cd",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2020-10-07T14:35:46Z",
+      "mergedAt": "2020-10-07T14:35:46Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "856b7fe98915102ceb7796dfec41cb1b627b8b9e"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAzOTQ4OTUz",
+          "commit": {
+            "abbreviatedOid": "2786038"
+          },
+          "author": "tfpauly",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-07T14:35:20Z",
+          "updatedAt": "2020-10-07T14:35:20Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 319,
@@ -27398,6 +27564,32 @@
           "updatedAt": "2020-10-01T17:06:31Z"
         }
       ],
+      "reviews": []
+    },
+    {
+      "number": 327,
+      "id": "MDExOlB1bGxSZXF1ZXN0NDk5NTQ1NDg5",
+      "title": "Rewrite \"Resumption PSK Oracle Mitigation\".",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/327",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I think this is a more general attack and deserves a more general description of the mitigation. See https://github.com/tlswg/draft-ietf-tls-esni/pull/317#discussion_r501319277 and #263.\r\n\r\n@chris-wood ",
+      "createdAt": "2020-10-07T22:13:35Z",
+      "updatedAt": "2020-10-07T22:24:28Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "856b7fe98915102ceb7796dfec41cb1b627b8b9e",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "ch-malleability",
+      "headRefOid": "d558a7a2152686fb8704b5a048de2e57a909ffb7",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
       "reviews": []
     }
   ]
