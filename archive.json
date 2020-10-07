@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2020-10-02T22:32:13.346775+00:00",
+  "timestamp": "2020-10-07T14:33:29.161399+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -7111,15 +7111,15 @@
       "id": "MDU6SXNzdWU2OTExMzk0OTg=",
       "title": "Greasing to supporting servers",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/295",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "wbl",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "@cjpatton and I were sitting down and thinking and we realized the following scenario can happen:\r\n\r\n1. example.com is on hosting.com, which supports ECH\r\n1. example.com has an HTTPS record, an A record, AAAA record pointing at the IP for hosting.com\r\n1. A user of a browsers latest release that supports ECH and greases the extension is using a resolver that doesn't resolve HTTPS records\r\n\r\nThis results in an ECH request being made with SNI=example.com, and a rejection of the ECH. So now the question is what the client should do and what should servers expect?\r\n* Try again, with the outer SNI the one matching the one in the new config\r\n* Use the connection authoritatively for example.com since the connection has already revealed the issue.\r\n\r\n",
       "createdAt": "2020-09-02T15:52:47Z",
-      "updatedAt": "2020-10-01T17:38:22Z",
-      "closedAt": null,
+      "updatedAt": "2020-10-05T15:28:21Z",
+      "closedAt": "2020-10-05T15:28:21Z",
       "comments": [
         {
           "author": "davidben",
@@ -7162,6 +7162,13 @@
           "body": "@wbl, a proposed fix has been merged. See #321.",
           "createdAt": "2020-10-01T17:38:21Z",
           "updatedAt": "2020-10-01T17:38:21Z"
+        },
+        {
+          "author": "wbl",
+          "authorAssociation": "NONE",
+          "body": "I think this text works.",
+          "createdAt": "2020-10-05T15:28:19Z",
+          "updatedAt": "2020-10-05T15:28:19Z"
         }
       ]
     },
@@ -7454,6 +7461,70 @@
       "body": "Note to self. Let's pick a set and range that works.",
       "createdAt": "2020-10-01T22:53:36Z",
       "updatedAt": "2020-10-01T22:53:36Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 323,
+      "id": "MDU6SXNzdWU3MTUyMjYyMTA=",
+      "title": "Re-re-visit outer ClientHello binding (saves 65 bytes)",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/323",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "We previously decided not to bind the outer ClientHello to the ECH decryption, because doing so is rather a hassle. We'd need something similar to the TLS 1.3 PSK binder mess, with the added complexity of ordering relative to the PSK binders themselves. Additionally, while the binding helps with some of the don't stick out properties, there were other attacks on distinguishability anyway. So, instead, we mitigated the inner ClientHello malleability with OuterExtensions.inner_digest and left the outer ClientHello unbound.\r\n\r\nHowever, we've since decided not to allow PSKs in the outer ClientHello. Perhaps we should revisit this. Suppose the AD parameter to the ECH decryption were the entire outer ClientHello, minus the ECH extension. I believe this means we no longer need OuterExtensions.inner_digest. That would give an immediate 33-byte savings. It would then unlock a further 32 byte savings by amending #312 to say:\r\n\r\n* Client always encodes an empty legacy_session_id in ECH plaintext.\r\n* Client-facing server copies outer legacy_session_id to inner ClientHello as part of decompression.\r\n\r\n(The reason we can't do this easily right now is that, if the inner ClientHello lacks outer_extension, nothing's authenticating legacy_session_id. Since the field in TLS 1.3 is all but ignored, it's \"obvious\" that the malleability doesn't matter, but it's nicer to not need to think about such things.)\r\n\r\nFrom looking at Chrome's ClientHellos and working through what we'd send (drop 1.2-only extensions, compress most), it looks like the inner ClientHello will be maybe 130-140 bytes, plus a padded server_name. The 65 bytes above would almost halve the overhead.\r\n\r\nIn some sense what's going on here is our 16-byte tag on the AEAD in the ECH ciphertext is going to waste. We didn't authenticate everything that goes into reconstructing the inner ClientHello (outer_extensions), so instead we authenticate another hash (OuterExtensions.inner_digest) and check that afterwards. (To that end, if we do this, we probably need to say the server MUST reject encrypted_client_hello showing up in outer_extensions, that way all inputs to decompression are authenticated. Equivalently, decompression is done relative to the ECH-extension-less AD input rather than the original outer ClientHello.)",
+      "createdAt": "2020-10-05T23:22:06Z",
+      "updatedAt": "2020-10-05T23:29:36Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 324,
+      "id": "MDU6SXNzdWU3MTUyNTk1NTM=",
+      "title": "Clarify that CHInner ECH payload contents",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/324",
+      "state": "OPEN",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Unless I missed it, nowhere in the spec does it say that clients SHOULD/MUST send an empty ECH extension in CHInner (to trigger the confirmation signal). Should we add this?\r\n\r\ncc @davidben, @cjpatton",
+      "createdAt": "2020-10-06T00:57:38Z",
+      "updatedAt": "2020-10-06T00:57:38Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 325,
+      "id": "MDU6SXNzdWU3MTUyNjAxMjY=",
+      "title": "Specify cross-HRR key rotation issue(s)",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/325",
+      "state": "OPEN",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "If a server implements ECH decryption via an RPC call, it's possible for the client's ECH keys to be valid for CH1 but invalid for CH2, perhaps due to a race condition that updates the server's keys across these messages. This should be exceedingly rare in practice, so failing the connection with an alert is probably fine, but we should probably be clear about this.\r\n\r\ncc @cjpatton ",
+      "createdAt": "2020-10-06T00:59:13Z",
+      "updatedAt": "2020-10-06T00:59:13Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 326,
+      "id": "MDU6SXNzdWU3MTUyNjA1MzA=",
+      "title": "No encryption AD specified",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/326",
+      "state": "OPEN",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@davidben mentions possibly binding the outer CH to the ECH encryption in #323. If we don't do that, we should at least bind the encryption to the non-encrypted parts of the ECH extension (`config_if`, `suite`, and so on).\r\n\r\ncc @cjpatton ",
+      "createdAt": "2020-10-06T01:00:24Z",
+      "updatedAt": "2020-10-06T01:00:24Z",
       "closedAt": null,
       "comments": []
     }
@@ -25729,18 +25800,40 @@
       "labels": [],
       "body": "Closes #264.",
       "createdAt": "2020-09-30T18:51:06Z",
-      "updatedAt": "2020-09-30T23:26:29Z",
+      "updatedAt": "2020-10-06T12:32:15Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
-      "baseRefOid": "b58aa3af62cc7e9eb9b9292e0500fa13aef19413",
+      "baseRefOid": "32ce20a4a0e256733d03ec56cd8081df1d794012",
       "headRepository": "cjpatton/draft-ietf-tls-esni",
       "headRefName": "server_side_padding",
-      "headRefOid": "4afb7a7c30264da2099ad31ef2523ea8b977c4bc",
+      "headRefOid": "8ca7de2b0ade17973b6d01de03565aeff616acee",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> How does handshake_padding differ from RFC 7685, less this one sentence: \"The server MUST NOT echo the extension.\" and some clarification about EE/CR/C/?\r\n\r\nThat's basically it. ",
+          "createdAt": "2020-10-06T01:49:27Z",
+          "updatedAt": "2020-10-06T01:49:27Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "And the concern is that clients will enforce that MUST, so that you can't use extension 21 here?",
+          "createdAt": "2020-10-06T05:15:15Z",
+          "updatedAt": "2020-10-06T05:15:15Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> And the concern is that clients will enforce that MUST, so that you can't use extension 21 here?\r\n\r\nFrom discussion in #264, it seems overall simpler to just burn an extension code point rather than change existing behavior in code and text.",
+          "createdAt": "2020-10-06T12:32:15Z",
+          "updatedAt": "2020-10-06T12:32:15Z"
+        }
+      ],
       "reviews": [
         {
           "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NDk5ODI0MzEy",
@@ -25758,31 +25851,31 @@
               "originalPosition": 48,
               "body": "Nit: I think this should be `{{?RFC7685}}` to mark it as an informational reference rather than a normative reference.",
               "createdAt": "2020-09-30T21:26:29Z",
-              "updatedAt": "2020-09-30T22:24:39Z"
+              "updatedAt": "2020-10-06T01:48:46Z"
             },
             {
               "originalPosition": 31,
               "body": "Meh. I'd drop that second sentence. The extension is perfectly compatible with TLS 1.2. The server will just ignore it as with any other unknown extension.",
               "createdAt": "2020-09-30T21:27:33Z",
-              "updatedAt": "2020-09-30T22:24:39Z"
+              "updatedAt": "2020-10-06T01:48:46Z"
             },
             {
               "originalPosition": 21,
               "body": "This should go in IANA Considerations, with a suitable TLS 1.3 column (all the messages).",
               "createdAt": "2020-09-30T21:28:39Z",
-              "updatedAt": "2020-09-30T22:24:39Z"
+              "updatedAt": "2020-10-06T01:48:46Z"
             },
             {
               "originalPosition": 41,
               "body": "I was going to suggest we go ahead and stick it into the other messages too for the client Finished, but maybe that's better deferred until later. Though we'd have to explicitly say it's not allowed in any other \"request\" messages but we may define what it means later, whereas any \"response\" messages we forbid it from now will be stuck. So that's just a mess.\r\n\r\nIn particular, if we believe in compressed certificates staying as-is, any client certificates story will need client EncryptedExtensions. That said, at least in the client EncryptedExtensions formulation we're pondering for ALPS, the signal would be in the wrong place so it's a mess all around. (https://github.com/vasilvv/tls-alps/pull/5. It's possible we came up with the wrong formulation---I still need to email the about it.)\r\n\r\n@ekr, do you have thoughts?\r\n\r\n(FWIW, a Padding message would avoid all this because it wouldn't need to interact with how each message fits into extension request/response patterns. ;-) We'd need to communicate a single boolean in either direction and then everyone is free to pad to their heart's content anywhere.)",
               "createdAt": "2020-09-30T21:46:38Z",
-              "updatedAt": "2020-09-30T22:24:39Z"
+              "updatedAt": "2020-10-06T01:48:46Z"
             },
             {
               "originalPosition": 132,
               "body": "This should probably be clear this is going in EncryptedExtensions, not Certificate, as they both carry padding.",
               "createdAt": "2020-09-30T21:47:32Z",
-              "updatedAt": "2020-09-30T22:24:39Z"
+              "updatedAt": "2020-10-06T01:48:46Z"
             }
           ]
         },
@@ -25802,7 +25895,7 @@
               "originalPosition": 31,
               "body": "Hmm, the server's reply appears in the EncryptedExtensions message, so the server behavior is ill-defined in TLS<=1.2. I suppose the answer is \"who cares\"?",
               "createdAt": "2020-09-30T22:18:43Z",
-              "updatedAt": "2020-09-30T22:24:39Z"
+              "updatedAt": "2020-10-06T01:48:46Z"
             }
           ]
         },
@@ -25822,7 +25915,291 @@
               "originalPosition": 21,
               "body": " Good catch, thanks!",
               "createdAt": "2020-09-30T22:20:23Z",
-              "updatedAt": "2020-09-30T22:24:39Z"
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDg0ODE2",
+          "commit": {
+            "abbreviatedOid": "4afb7a7"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T22:49:25Z",
+          "updatedAt": "2020-10-02T22:54:34Z",
+          "comments": [
+            {
+              "originalPosition": 41,
+              "body": "Given that the client-side piece is orthogonal to ECH, I think it's probably best to defer that until we figure out the client EE/ALPS story. ",
+              "createdAt": "2020-10-02T22:49:25Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            },
+            {
+              "originalPosition": 143,
+              "body": "Is this the Certificate message after compression, or before? I assume the former, though it would be good to clarify.",
+              "createdAt": "2020-10-02T22:51:25Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            },
+            {
+              "originalPosition": 134,
+              "body": "What about `CertificateVerify`?",
+              "createdAt": "2020-10-02T22:51:46Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            },
+            {
+              "originalPosition": 128,
+              "body": "I'd recommend pulling this out into a separate issue entirely. The client-side padding policy took a while to get consensus, so trying to spell the server-side story here might delay landing of the general mechanism. Can we do that?",
+              "createdAt": "2020-10-02T22:53:12Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            },
+            {
+              "originalPosition": 126,
+              "body": "I'd recommend pulling this out into a separate issue entirely. The client-side padding policy took a while to get consensus, so trying to spell the server-side story here might delay landing of the general mechanism. Can we do that and replace this with an open issue?\r\n\r\n```suggestion\r\n[[OPEN ISSUE: provide server-side padding policy based on Certificate, CertificateVerify(?), ALPN list, and\r\npossibly other (future) parameters.]]\r\n```",
+              "createdAt": "2020-10-02T22:54:30Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDkxMjU4",
+          "commit": {
+            "abbreviatedOid": "fd1b2ad"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:15:24Z",
+          "updatedAt": "2020-10-02T23:15:24Z",
+          "comments": [
+            {
+              "originalPosition": 31,
+              "body": "Removed. I also removed \"the server MUST ignore [the] extension if it negotiates TLS 1.2 or below\".",
+              "createdAt": "2020-10-02T23:15:24Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDkxODMy",
+          "commit": {
+            "abbreviatedOid": "fd1b2ad"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:18:02Z",
+          "updatedAt": "2020-10-02T23:18:02Z",
+          "comments": [
+            {
+              "originalPosition": 143,
+              "body": "The former. More precisely, what's intended is the Certificate message as it appears on the wire. I'll clarify this. Can you provide me a reference for certificate compression? I'm unfamiliar with that spec.",
+              "createdAt": "2020-10-02T23:18:02Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDkyODIy",
+          "commit": {
+            "abbreviatedOid": "fd1b2ad"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:23:04Z",
+          "updatedAt": "2020-10-02T23:23:05Z",
+          "comments": [
+            {
+              "originalPosition": 143,
+              "body": "Sure -- [here you go](https://datatracker.ietf.org/doc/draft-ietf-tls-certificate-compression/)! The reference {{?I-D.ietf-tls-certificate-compression}} should work.",
+              "createdAt": "2020-10-02T23:23:05Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDkzMTIx",
+          "commit": {
+            "abbreviatedOid": "fd1b2ad"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:24:22Z",
+          "updatedAt": "2020-10-02T23:24:23Z",
+          "comments": [
+            {
+              "originalPosition": 134,
+              "body": "I'm not sure we should RECOMMEND that. On the one hand, the length of CertificateVerify would leak is the (parameters of the) signature algorithm, On the other hand, an RSA signature is much longer than ECDSA-P256. Hence, the downside is lots of extra padding to protect clients/servers that need to support RSA.",
+              "createdAt": "2020-10-02T23:24:23Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDkzNDEw",
+          "commit": {
+            "abbreviatedOid": "fd1b2ad"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:25:39Z",
+          "updatedAt": "2020-10-02T23:25:40Z",
+          "comments": [
+            {
+              "originalPosition": 128,
+              "body": "In that case, I think we should postpone this change until affter -08.",
+              "createdAt": "2020-10-02T23:25:40Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDkzOTY3",
+          "commit": {
+            "abbreviatedOid": "fd1b2ad"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:28:08Z",
+          "updatedAt": "2020-10-02T23:28:08Z",
+          "comments": [
+            {
+              "originalPosition": 126,
+              "body": "I think it's fine to RECOMMEND something that is obsoleted by a better idea later on. But as I mentioned above, if this change is likely to be controversial, then we should take it to the list. In addition, I think we should consider publishing -08 beforehand. There's already substantial changes.",
+              "createdAt": "2020-10-02T23:28:08Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDk1NjQw",
+          "commit": {
+            "abbreviatedOid": "45fa615"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:36:27Z",
+          "updatedAt": "2020-10-02T23:36:28Z",
+          "comments": [
+            {
+              "originalPosition": 128,
+              "body": "Yeah, that seems reasonable. Do you want to flag the issue (and PR) as such?",
+              "createdAt": "2020-10-02T23:36:27Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDk1ODAy",
+          "commit": {
+            "abbreviatedOid": "45fa615"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:37:21Z",
+          "updatedAt": "2020-10-02T23:37:21Z",
+          "comments": [
+            {
+              "originalPosition": 134,
+              "body": "Eh, true, but I don't think the cost is that great.",
+              "createdAt": "2020-10-02T23:37:21Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDk4MTEx",
+          "commit": {
+            "abbreviatedOid": "45fa615"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:50:10Z",
+          "updatedAt": "2020-10-02T23:50:10Z",
+          "comments": [
+            {
+              "originalPosition": 128,
+              "body": "This PR already has an associated issue (https://github.com/tlswg/draft-ietf-tls-esni/issues/264). Why don't I just add a comment there?",
+              "createdAt": "2020-10-02T23:50:10Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAyMDk1MzM3",
+          "commit": {
+            "abbreviatedOid": "45fa615"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-05T14:09:46Z",
+          "updatedAt": "2020-10-05T14:09:46Z",
+          "comments": [
+            {
+              "originalPosition": 126,
+              "body": "Yeah, I expect this to be controversial. I'd take it to the list.",
+              "createdAt": "2020-10-05T14:09:46Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAyMDk1NjAy",
+          "commit": {
+            "abbreviatedOid": "45fa615"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-05T14:10:03Z",
+          "updatedAt": "2020-10-05T14:10:03Z",
+          "comments": [
+            {
+              "originalPosition": 128,
+              "body": "That's what I was thinking, yeah. ",
+              "createdAt": "2020-10-05T14:10:03Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAyNTI5OTM2",
+          "commit": {
+            "abbreviatedOid": "45fa615"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "How does handshake_padding differ from RFC 7685, less this one sentence: \"The server MUST NOT echo the extension.\" and some clarification about EE/CR/C/?",
+          "createdAt": "2020-10-06T01:44:54Z",
+          "updatedAt": "2020-10-06T01:46:18Z",
+          "comments": [
+            {
+              "originalPosition": 92,
+              "body": "```suggestion\r\n(ECHConfig.maximum_name_length) when computing the padding length as follows:\r\n```",
+              "createdAt": "2020-10-06T01:44:54Z",
+              "updatedAt": "2020-10-06T01:48:46Z"
             }
           ]
         }
@@ -25950,7 +26327,7 @@
       "labels": [],
       "body": "Closes #233.\r\n\r\nThis is limited to parameters applicable to TLS 1.3 and beyond. For example,\r\nTLS 1.2 ciphersuites may appear in ClientHelloOuter, so long as all TLS 1.3\r\nciphersuites in ClientHelloOuter match that in ClientHelloInner.\r\n\r\ncc @davidben, @cjpatton",
       "createdAt": "2020-09-30T23:25:50Z",
-      "updatedAt": "2020-10-02T22:31:24Z",
+      "updatedAt": "2020-10-06T13:39:26Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "e9c1bbd1acd13f1683f34fe0a51752da2c55cb6c",
@@ -26166,6 +26543,138 @@
               "body": "Yep, that is more clear! ",
               "createdAt": "2020-10-02T22:29:40Z",
               "updatedAt": "2020-10-02T22:31:24Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDk0ODYw",
+          "commit": {
+            "abbreviatedOid": "7b41099"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:32:22Z",
+          "updatedAt": "2020-10-02T23:32:22Z",
+          "comments": [
+            {
+              "originalPosition": 7,
+              "body": "\"non-ECH PSK\": does this term still exist? I know we talked about this already but I forgot where we landed :)",
+              "createdAt": "2020-10-02T23:32:22Z",
+              "updatedAt": "2020-10-02T23:32:22Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAxNDk2MzE2",
+          "commit": {
+            "abbreviatedOid": "7b41099"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-02T23:40:01Z",
+          "updatedAt": "2020-10-02T23:40:01Z",
+          "comments": [
+            {
+              "originalPosition": 7,
+              "body": "It's addressed in another PR.",
+              "createdAt": "2020-10-02T23:40:01Z",
+              "updatedAt": "2020-10-02T23:40:01Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAyNTY0Mzcz",
+          "commit": {
+            "abbreviatedOid": "7b41099"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "More evidence that we don't have a good shared understanding of what HRR is for, sadly.\r\n\r\nThe primary thing of concern here is the ability for HRR to cause a client to change their expressed preferences or how those preferences are expressed (specifically for key shares).  This pull request is phrased differently in terms of what might cause a server to send HRR, which isn't that.  The HRR is the only thing that a client should allow to change its preferences, but focus on HRR seems wrong.\r\n\r\nTo avoid problems we have two options: the preference cannot change (which is the ideal choice if we can manage it), or the preference can change, but any change is authenticated.  To that end, this is a reasonable design choice, I just would prefer we concentrate on the critical property.\r\n\r\nAlso, I'm fairly sure that this means that 8446 needs to be updated by this.",
+          "createdAt": "2020-10-06T03:48:39Z",
+          "updatedAt": "2020-10-06T04:07:27Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "Does HRR-sensitive mean \"all extensions or parameters that might change in response to receiving HRR\"?  If it does, then maybe say that.",
+              "createdAt": "2020-10-06T03:48:40Z",
+              "updatedAt": "2020-10-06T04:07:27Z"
+            },
+            {
+              "originalPosition": 28,
+              "body": "Isn't the primary consideration whether they might change between subsequent ClientHellos?  That these might cause a server to send HelloRetryRequest is merely consequential.",
+              "createdAt": "2020-10-06T03:51:05Z",
+              "updatedAt": "2020-10-06T04:07:27Z"
+            },
+            {
+              "originalPosition": 17,
+              "body": "This connects parameters that might change in response to HRR to whether they appear inside or outside.  This assumes that they appear in both places (and that they are the same).\r\n\r\nThere's an implicit constraint here that probably needs to be explicit: HelloRetryRequest can only be sent to affect a change in a ClientHello that affects key negotiation.  This is recognizing a new constraint on the design that was essentially always true, but not mandatory.  In principle, prior to this, HRR could affect a new extension that didn't affect key negotiation.\r\n\r\nConveniently, we already have a proxy for that.  Extensions that are CH/SH (as opposed to CH/EE) are those that HRR can change.  In theory there could be some that appear in CH alone, but that is unlikely to be true for a new extension given our systemic rejection of trial decryption.\r\n\r\nThis should probably be reflected somewhere, probably by updating RFC 8446.",
+              "createdAt": "2020-10-06T04:01:35Z",
+              "updatedAt": "2020-10-06T04:07:27Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAyOTY2MTcx",
+          "commit": {
+            "abbreviatedOid": "7b41099"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-06T13:33:32Z",
+          "updatedAt": "2020-10-06T13:33:32Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "We could rewrite this as, \"Future extensions that might change across first and second ClientHello messages in response to a HelloRetryRequest MUST match,\" as you suggest.",
+              "createdAt": "2020-10-06T13:33:32Z",
+              "updatedAt": "2020-10-06T13:33:32Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAyOTY2NDgy",
+          "commit": {
+            "abbreviatedOid": "7b41099"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-06T13:33:48Z",
+          "updatedAt": "2020-10-06T13:33:48Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "That seems like an improvement, yeah. I'll take it.",
+              "createdAt": "2020-10-06T13:33:48Z",
+              "updatedAt": "2020-10-06T13:33:48Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAyOTcyNTI2",
+          "commit": {
+            "abbreviatedOid": "7b41099"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-06T13:39:25Z",
+          "updatedAt": "2020-10-06T13:39:26Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "I agree with the above, but it's not clear to me what specifically you're suggesting. The *intent* of this change is to encompass any CH/SH extension that might change due to HRR, and we refer to those as \"HRR-sensitive\" parameters. \r\n\r\nCan you please clarify what specifically what you're looking for, ideally with suggested text?\r\n\r\n> This should probably be reflected somewhere, probably by updating RFC 8446.\r\n\r\nI don't think this needs to update RFC8446. The HRR language in that document is somewhat unclear as-is, so it probably makes more sense to tackle this in rfc8446-bis.",
+              "createdAt": "2020-10-06T13:39:25Z",
+              "updatedAt": "2020-10-06T13:39:26Z"
             }
           ]
         }
@@ -26656,24 +27165,26 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NDk2MzkwOTE2",
       "title": "Fix ECH and version negotiation order.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/320",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "davidben",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "The version check on the outer ClientHello doesn't make much sense\r\nsince, when ECH is accepted, the version is based on the inner\r\nClientHello anyway. See\r\nhttps://github.com/tlswg/draft-ietf-tls-esni/issues/309#issuecomment-702233855.\r\n\r\nI've left a TODO since it seems weird to have a client requirement like\r\nthat be so load-bearing without a corresponding server check. Not sure\r\nwhere we should go there.",
       "createdAt": "2020-10-01T16:30:47Z",
-      "updatedAt": "2020-10-02T20:55:29Z",
+      "updatedAt": "2020-10-07T14:32:47Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "e9c1bbd1acd13f1683f34fe0a51752da2c55cb6c",
       "headRepository": "davidben/draft-ietf-tls-esni",
       "headRefName": "versions",
       "headRefOid": "74ac381fc96ff4982b1d4ea74146589fddec2f77",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2020-10-07T14:32:47Z",
+      "mergedAt": "2020-10-07T14:32:47Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "f19f56700c3b8e3a3e7fb2f7d8b04f36585f15d1"
+      },
       "comments": [
         {
           "author": "cjpatton",
@@ -26816,6 +27327,19 @@
               "updatedAt": "2020-10-02T20:54:55Z"
             }
           ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTAzOTQ1OTkz",
+          "commit": {
+            "abbreviatedOid": "74ac381"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-07T14:32:36Z",
+          "updatedAt": "2020-10-07T14:32:36Z",
+          "comments": []
         }
       ]
     },
