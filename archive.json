@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2020-10-07T23:01:32.792143+00:00",
+  "timestamp": "2020-10-08T18:08:51.088545+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -7476,7 +7476,7 @@
       "labels": [],
       "body": "We previously decided not to bind the outer ClientHello to the ECH decryption, because doing so is rather a hassle. We'd need something similar to the TLS 1.3 PSK binder mess, with the added complexity of ordering relative to the PSK binders themselves. Additionally, while the binding helps with some of the don't stick out properties, there were other attacks on distinguishability anyway. So, instead, we mitigated the inner ClientHello malleability with OuterExtensions.inner_digest and left the outer ClientHello unbound.\r\n\r\nHowever, we've since decided not to allow PSKs in the outer ClientHello. Perhaps we should revisit this. Suppose the AD parameter to the ECH decryption were the entire outer ClientHello, minus the ECH extension. I believe this means we no longer need OuterExtensions.inner_digest. That would give an immediate 33-byte savings. It would then unlock a further 32 byte savings by amending #312 to say:\r\n\r\n* Client always encodes an empty legacy_session_id in ECH plaintext.\r\n* Client-facing server copies outer legacy_session_id to inner ClientHello as part of decompression.\r\n\r\n(The reason we can't do this easily right now is that, if the inner ClientHello lacks outer_extension, nothing's authenticating legacy_session_id. Since the field in TLS 1.3 is all but ignored, it's \"obvious\" that the malleability doesn't matter, but it's nicer to not need to think about such things.)\r\n\r\nFrom looking at Chrome's ClientHellos and working through what we'd send (drop 1.2-only extensions, compress most), it looks like the inner ClientHello will be maybe 130-140 bytes, plus a padded server_name. The 65 bytes above would almost halve the overhead.\r\n\r\nIn some sense what's going on here is our 16-byte tag on the AEAD in the ECH ciphertext is going to waste. We didn't authenticate everything that goes into reconstructing the inner ClientHello (outer_extensions), so instead we authenticate another hash (OuterExtensions.inner_digest) and check that afterwards. (To that end, if we do this, we probably need to say the server MUST reject encrypted_client_hello showing up in outer_extensions, that way all inputs to decompression are authenticated. Equivalently, decompression is done relative to the ECH-extension-less AD input rather than the original outer ClientHello.)",
       "createdAt": "2020-10-05T23:22:06Z",
-      "updatedAt": "2020-10-07T21:41:00Z",
+      "updatedAt": "2020-10-08T01:16:41Z",
       "closedAt": null,
       "comments": [
         {
@@ -7499,6 +7499,13 @@
           "body": "Another benefit is it stops the attacker from probing information about compressed extensions. Currently an attacker can learn which extensions are compressed in the inner ClientHello by removing them from the outer ClientHello and seeing if the server still responds. This isn't a huge deal, as compressed extensions are assumed public, but this way we remove that vector and leave only the fuzzier signal from the ciphertext length.",
           "createdAt": "2020-10-07T21:41:00Z",
           "updatedAt": "2020-10-07T21:41:00Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> Filling it with zeros, as @bemasc pointed out to me, requires predicting the length of the encrypted inner ClientHello. This isn't strictly impossible (ADs don't change ciphertext length), but it seems needlessly fussy and ECH is already requiring we be able re-encode ClientHellos, lengths and all.\r\n\r\nOn second thought, a lot of implementations will need to do that prediction anyway. The workaround for the old F5 bug means we'll need to know the eventual size for the padding extension. (On the other hand, you can probably assume anyone doing ECH is not running those things. On the other hand, turning off the workaround would stick out.) Ah well. We did it for PSK already.\r\n\r\n(I wonder if we can do drop that workaround now that TLS 1.0 and 1.1 are gone...)",
+          "createdAt": "2020-10-08T01:16:40Z",
+          "updatedAt": "2020-10-08T01:16:40Z"
         }
       ]
     },
@@ -26298,24 +26305,26 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NDk1ODM2MTQx",
       "title": "Bump ech_hrr_key length to 32 bytes to align with latest HPKE changes.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/315",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "chris-wood",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "See https://github.com/cfrg/draft-irtf-cfrg-hpke/pull/159, and the related [CFRG thread](https://mailarchive.ietf.org/arch/msg/cfrg/mxBzZq85ijSMNMUwyI3gA3B0U4U/).\r\n\r\ncc @cjpatton ",
       "createdAt": "2020-09-30T23:06:28Z",
-      "updatedAt": "2020-10-01T00:12:44Z",
+      "updatedAt": "2020-10-08T18:04:25Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "e9c1bbd1acd13f1683f34fe0a51752da2c55cb6c",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "caw/ech-hrr-key",
       "headRefOid": "dd2e5aad2eb6cec18afc20f3b856bc42c54bb894",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2020-10-08T18:04:25Z",
+      "mergedAt": "2020-10-08T18:04:24Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "28c02428ce2e46dad0106a93eeb98655608bf29f"
+      },
       "comments": [
         {
           "author": "cjpatton",
@@ -27571,26 +27580,42 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NDk5NTQ1NDg5",
       "title": "Rewrite \"Resumption PSK Oracle Mitigation\".",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/327",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "davidben",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "I think this is a more general attack and deserves a more general description of the mitigation. See https://github.com/tlswg/draft-ietf-tls-esni/pull/317#discussion_r501319277 and #263.\r\n\r\n@chris-wood ",
       "createdAt": "2020-10-07T22:13:35Z",
-      "updatedAt": "2020-10-07T22:24:28Z",
+      "updatedAt": "2020-10-07T23:03:41Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
-      "baseRefOid": "856b7fe98915102ceb7796dfec41cb1b627b8b9e",
+      "baseRefOid": "e3a6b583b47c0907774bdb04d45df881270df17e",
       "headRepository": "davidben/draft-ietf-tls-esni",
       "headRefName": "ch-malleability",
-      "headRefOid": "d558a7a2152686fb8704b5a048de2e57a909ffb7",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "b7533f478742cf91b0002ffbfbbc88633aa9b842",
+      "closedAt": "2020-10-07T23:03:41Z",
+      "mergedAt": "2020-10-07T23:03:41Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "61b11b92583f170bcd348f3c09bbb927aa56d19c"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA0MzI2MTI4",
+          "commit": {
+            "abbreviatedOid": "d558a7a"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-07T23:02:52Z",
+          "updatedAt": "2020-10-07T23:02:52Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
