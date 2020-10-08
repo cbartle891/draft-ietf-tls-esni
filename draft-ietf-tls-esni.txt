@@ -5,11 +5,11 @@
 tls                                                          E. Rescorla
 Internet-Draft                                                RTFM, Inc.
 Intended status: Standards Track                                  K. Oku
-Expires: 10 April 2021                                            Fastly
+Expires: 11 April 2021                                            Fastly
                                                              N. Sullivan
                                                                C.A. Wood
                                                               Cloudflare
-                                                          7 October 2020
+                                                          8 October 2020
 
 
                        TLS Encrypted Client Hello
@@ -35,7 +35,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 10 April 2021.
+   This Internet-Draft will expire on 11 April 2021.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Rescorla, et al.          Expires 10 April 2021                 [Page 1]
+Rescorla, et al.          Expires 11 April 2021                 [Page 1]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -109,28 +109,28 @@ Table of Contents
 
 
 
-Rescorla, et al.          Expires 10 April 2021                 [Page 2]
+Rescorla, et al.          Expires 11 April 2021                 [Page 2]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
        10.10.2.  HelloRetryRequest Hijack Mitigation . . . . . . . .  29
-       10.10.3.  Resumption PSK Oracle Mitigation  . . . . . . . . .  30
+       10.10.3.  ClientHello Malleability Mitigation . . . . . . . .  30
    11. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  31
      11.1.  Update of the TLS ExtensionType Registry . . . . . . . .  31
-     11.2.  Update of the TLS Alert Registry . . . . . . . . . . . .  31
-   12. ECHConfig Extension Guidance  . . . . . . . . . . . . . . . .  31
-   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  31
-     13.1.  Normative References . . . . . . . . . . . . . . . . . .  31
-     13.2.  Informative References . . . . . . . . . . . . . . . . .  32
-   Appendix A.  Alternative SNI Protection Designs . . . . . . . . .  33
-     A.1.  TLS-layer . . . . . . . . . . . . . . . . . . . . . . . .  33
+     11.2.  Update of the TLS Alert Registry . . . . . . . . . . . .  32
+   12. ECHConfig Extension Guidance  . . . . . . . . . . . . . . . .  32
+   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  32
+     13.1.  Normative References . . . . . . . . . . . . . . . . . .  32
+     13.2.  Informative References . . . . . . . . . . . . . . . . .  33
+   Appendix A.  Alternative SNI Protection Designs . . . . . . . . .  34
+     A.1.  TLS-layer . . . . . . . . . . . . . . . . . . . . . . . .  34
        A.1.1.  TLS in Early Data . . . . . . . . . . . . . . . . . .  34
-       A.1.2.  Combined Tickets  . . . . . . . . . . . . . . . . . .  34
-     A.2.  Application-layer . . . . . . . . . . . . . . . . . . . .  34
+       A.1.2.  Combined Tickets  . . . . . . . . . . . . . . . . . .  35
+     A.2.  Application-layer . . . . . . . . . . . . . . . . . . . .  35
        A.2.1.  HTTP/2 CERTIFICATE Frames . . . . . . . . . . . . . .  35
    Appendix B.  Acknowledgements . . . . . . . . . . . . . . . . . .  35
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  35
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  36
 
 1.  Introduction
 
@@ -165,7 +165,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                 [Page 3]
+Rescorla, et al.          Expires 11 April 2021                 [Page 3]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -221,7 +221,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                 [Page 4]
+Rescorla, et al.          Expires 11 April 2021                 [Page 4]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -277,7 +277,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                 [Page 5]
+Rescorla, et al.          Expires 11 April 2021                 [Page 5]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -333,7 +333,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                 [Page 6]
+Rescorla, et al.          Expires 11 April 2021                 [Page 6]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -389,7 +389,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                 [Page 7]
+Rescorla, et al.          Expires 11 April 2021                 [Page 7]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -445,7 +445,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                 [Page 8]
+Rescorla, et al.          Expires 11 April 2021                 [Page 8]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -501,7 +501,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                 [Page 9]
+Rescorla, et al.          Expires 11 April 2021                 [Page 9]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -557,7 +557,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 10]
+Rescorla, et al.          Expires 11 April 2021                [Page 10]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -613,7 +613,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 11]
+Rescorla, et al.          Expires 11 April 2021                [Page 11]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -660,7 +660,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
        pkR = Deserialize(ECHConfig.public_key)
        enc, context = SetupBaseS(pkR, "tls13 ech")
-       ech_hrr_key = context.Export("tls13 ech hrr key", 16)
+       ech_hrr_key = context.Export("tls13 ech hrr key", 32)
 
 
 
@@ -669,7 +669,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 12]
+Rescorla, et al.          Expires 11 April 2021                [Page 12]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -725,7 +725,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 13]
+Rescorla, et al.          Expires 11 April 2021                [Page 13]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -781,7 +781,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 14]
+Rescorla, et al.          Expires 11 April 2021                [Page 14]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -837,7 +837,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 15]
+Rescorla, et al.          Expires 11 April 2021                [Page 15]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -893,7 +893,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 16]
+Rescorla, et al.          Expires 11 April 2021                [Page 16]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -949,7 +949,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 17]
+Rescorla, et al.          Expires 11 April 2021                [Page 17]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1005,7 +1005,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 18]
+Rescorla, et al.          Expires 11 April 2021                [Page 18]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1020,7 +1020,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
        context = SetupBaseR(ClientECH.enc, skR, "tls13 ech")
        ClientHelloInner = context.Open("", ClientECH.payload)
-       ech_hrr_key = context.Export("tls13 ech hrr key", 16)
+       ech_hrr_key = context.Export("tls13 ech hrr key", 32)
 
    If decryption fails, the server MUST abort the connection with a
    "decrypt_error" alert.  Otherwise, the server scans ClientHelloInner
@@ -1061,7 +1061,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 19]
+Rescorla, et al.          Expires 11 April 2021                [Page 19]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1117,7 +1117,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 20]
+Rescorla, et al.          Expires 11 April 2021                [Page 20]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1173,7 +1173,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 21]
+Rescorla, et al.          Expires 11 April 2021                [Page 21]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1229,7 +1229,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 22]
+Rescorla, et al.          Expires 11 April 2021                [Page 22]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1285,7 +1285,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 23]
+Rescorla, et al.          Expires 11 April 2021                [Page 23]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1341,7 +1341,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 24]
+Rescorla, et al.          Expires 11 April 2021                [Page 24]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1397,7 +1397,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 25]
+Rescorla, et al.          Expires 11 April 2021                [Page 25]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1453,7 +1453,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 26]
+Rescorla, et al.          Expires 11 April 2021                [Page 26]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1509,7 +1509,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 27]
+Rescorla, et al.          Expires 11 April 2021                [Page 27]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1565,7 +1565,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 28]
+Rescorla, et al.          Expires 11 April 2021                [Page 28]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1621,7 +1621,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 29]
+Rescorla, et al.          Expires 11 April 2021                [Page 29]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1641,53 +1641,87 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    for equality and changes behavior based on the result can be used as
    an oracle to learn the client's SNI.
 
-10.10.3.  Resumption PSK Oracle Mitigation
+10.10.3.  ClientHello Malleability Mitigation
 
-   This attack uses resumption PSKs as an oracle for dictionary attacks
-   against a given ClientHello's true SNI.  To begin, the attacker first
-   interacts with a server to obtain a resumption ticket for a given
-   test domain, such as "test.com".  Later, upon receipt of a legitimate
-   ClientHello without a PSK binder, it computes a PSK binder using its
-   own ticket and forwards the resulting ClientHello.  Assume the server
-   then validates the PSK binder on the outer ClientHello and chooses
-   connection parameters based on the inner ClientHello.  A server which
-   then validates information in ClientHelloOuter ticket against
-   information in ClientHelloInner, such as the SNI, introduces an
-   oracle that can be used to test the encrypted SNI value of specific
-   ClientHello messages.
+   This attack aims to leak information about secret parts of the
+   encrypted ClientHello by adding attacker-controlled parameters and
+   observing the server's response.  In particular, the compression
+   mechanism described in Section 5.1 references parts of a potentially
+   attacker-controlled ClientHelloOuter to construct ClientHelloInner,
+   or a buggy server may incorrectly apply parameters from
+   ClientHelloOuter to the handshake.
 
-          Client                    Attacker                 Server
-
-                                           handshake and ticket
-                                              for "test.com"
-                                                <-------->
-
-          ClientHello
-          + key_share
-          + ech        -------->  (intercept)
-                                     ClientHello
-                                     + key_share
-                                     + ech
-                                     + pre_shared_key
-                                                -------->
-                                                              Alert
-                                                <--------
-
-               Figure 5: Message flow for resumption and PSK
+   To begin, the attacker first interacts with a server to obtain a
+   resumption ticket for a given test domain, such as "example.com".
+   Later, upon receipt of a ClientHelloOuter, it modifies it such that
+   the server will process the resumption ticket with ClientHelloInner.
+   If the server only accepts resumption PSKs that match the server
+   name, it will fail the PSK binder check with an alert when
+   ClientHelloInner is for "example.com" but silently ignore the PSK and
+   continue when ClientHelloInner is for any other name.  This
+   introduces an oracle for testing encrypted SNI values.
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 30]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Rescorla, et al.          Expires 11 April 2021                [Page 30]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
-   ECH mitigates against this attack by (1) prohibiting the
-   "pre_shared_key" extension in ClientHelloOuter and (2) requiring
-   servers ignore this extension when processing ClientHelloOuter.
-   Thus, if the server accepts the inner ClientHello, it only validates
-   binders in the inner ClientHello.  This means that PSKs are used
-   within the HPKE encryption envelope.
+          Client              Attacker                       Server
+
+                                        handshake and ticket
+                                           for "example.com"
+                                             <-------->
+
+          ClientHello
+          + key_share
+          + ech
+            + outer_extensions(pre_shared_key)
+          + pre_shared_key
+                       -------->
+                              (intercept)
+                              ClientHello
+                              + key_share
+                              + ech
+                                + outer_extensions(pre_shared_key)
+                              + pre_shared_key'
+                                                -------->
+                                                              Alert
+                                                               -or-
+                                                        ServerHello
+                                                                ...
+                                                           Finished
+                                                <--------
+
+              Figure 5: Message flow for malleable ClientHello
+
+   This attack may be generalized to any parameter which the server
+   varies by server name, such as ALPN preferences.
+
+   ECH mitigates this attack by only using ClientHelloOuter to compute
+   ClientHelloInner and authenticating all of ClientHelloInner with the
+   HPKE AEAD.  If any extensions are compressed as in Section 5.1, the
+   OuterExtensions.inner_digest field authenticates the decompressed
+   result.  If none are compressed, the entire ClientHello is encrypted
+   and authenticated directly.  An earlier iteration of this
+   specification only encrypted and authenticated the "server_name"
+   extension, which left the overall ClientHello vulnerable to an
+   analogue of this attack.
 
 11.  IANA Considerations
 
@@ -1695,6 +1729,14 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
    IANA is requested to create the following two entries in the existing
    registry for ExtensionType (defined in [RFC8446]):
+
+
+
+
+Rescorla, et al.          Expires 11 April 2021                [Page 31]
+
+Internet-Draft         TLS Encrypted Client Hello           October 2020
+
 
    1.  encrypted_client_hello(0xff08), with "TLS 1.3" column values
        being set to "CH, EE", and "Recommended" column being set to
@@ -1729,15 +1771,6 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
               dnsop-svcb-https-01, 13 July 2020, <http://www.ietf.org/
               internet-drafts/draft-ietf-dnsop-svcb-https-01.txt>.
 
-
-
-
-
-Rescorla, et al.          Expires 10 April 2021                [Page 31]
-
-Internet-Draft         TLS Encrypted Client Hello           October 2020
-
-
    [I-D.ietf-tls-exported-authenticator]
               Sullivan, N., "Exported Authenticators in TLS", Work in
               Progress, Internet-Draft, draft-ietf-tls-exported-
@@ -1751,6 +1784,15 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
               draft-irtf-cfrg-hpke-05, 30 July 2020,
               <http://www.ietf.org/internet-drafts/draft-irtf-cfrg-hpke-
               05.txt>.
+
+
+
+
+
+Rescorla, et al.          Expires 11 April 2021                [Page 32]
+
+Internet-Draft         TLS Encrypted Client Hello           October 2020
+
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -1787,13 +1829,6 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
               Negotiation Extension", RFC 7301, DOI 10.17487/RFC7301,
               July 2014, <https://www.rfc-editor.org/info/rfc7301>.
 
-
-
-Rescorla, et al.          Expires 10 April 2021                [Page 32]
-
-Internet-Draft         TLS Encrypted Client Hello           October 2020
-
-
    [RFC7858]  Hu, Z., Zhu, L., Heidemann, J., Mankin, A., Wessels, D.,
               and P. Hoffman, "Specification for DNS over Transport
               Layer Security (TLS)", RFC 7858, DOI 10.17487/RFC7858, May
@@ -1803,6 +1838,17 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
               (TLS) Cached Information Extension", RFC 7924,
               DOI 10.17487/RFC7924, July 2016,
               <https://www.rfc-editor.org/info/rfc7924>.
+
+
+
+
+
+
+
+Rescorla, et al.          Expires 11 April 2021                [Page 33]
+
+Internet-Draft         TLS Encrypted Client Hello           October 2020
+
 
    [RFC8094]  Reddy, T., Wing, D., and P. Patil, "DNS over Datagram
               Transport Layer Security (DTLS)", RFC 8094,
@@ -1832,24 +1878,6 @@ Appendix A.  Alternative SNI Protection Designs
 
 A.1.  TLS-layer
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Rescorla, et al.          Expires 10 April 2021                [Page 33]
-
-Internet-Draft         TLS Encrypted Client Hello           October 2020
-
-
 A.1.1.  TLS in Early Data
 
    In this variant, TLS Client Hellos are tunneled within early data
@@ -1861,6 +1889,22 @@ A.1.1.  TLS in Early Data
    necessary.  Afterwards, all records to and from backend servers are
    forwarded by the client-facing server - unmodified.  This avoids
    double encryption of TLS records.
+
+
+
+
+
+
+
+
+
+
+
+
+Rescorla, et al.          Expires 11 April 2021                [Page 34]
+
+Internet-Draft         TLS Encrypted Client Hello           October 2020
+
 
    Problems with this approach are: (1) servers may not always be able
    to distinguish inner Client Hellos from legitimate application data,
@@ -1886,26 +1930,6 @@ A.1.2.  Combined Tickets
 
 A.2.  Application-layer
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Rescorla, et al.          Expires 10 April 2021                [Page 34]
-
-Internet-Draft         TLS Encrypted Client Hello           October 2020
-
-
 A.2.1.  HTTP/2 CERTIFICATE Frames
 
    In this variant, clients request secondary certificates with
@@ -1928,6 +1952,15 @@ Appendix B.  Acknowledgements
    Richard Barnes, Christian Huitema, Patrick McManus, Matthew Prince,
    Nick Sullivan, Martin Thomson, and David Benjamin also provided
    important ideas and contributions.
+
+
+
+
+
+Rescorla, et al.          Expires 11 April 2021                [Page 35]
+
+Internet-Draft         TLS Encrypted Client Hello           October 2020
+
 
 Authors' Addresses
 
@@ -1957,4 +1990,27 @@ Authors' Addresses
 
 
 
-Rescorla, et al.          Expires 10 April 2021                [Page 35]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Rescorla, et al.          Expires 11 April 2021                [Page 36]
