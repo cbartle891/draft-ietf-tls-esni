@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2020-10-08T18:08:51.088545+00:00",
+  "timestamp": "2020-10-09T15:59:55.089054+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -7476,7 +7476,7 @@
       "labels": [],
       "body": "We previously decided not to bind the outer ClientHello to the ECH decryption, because doing so is rather a hassle. We'd need something similar to the TLS 1.3 PSK binder mess, with the added complexity of ordering relative to the PSK binders themselves. Additionally, while the binding helps with some of the don't stick out properties, there were other attacks on distinguishability anyway. So, instead, we mitigated the inner ClientHello malleability with OuterExtensions.inner_digest and left the outer ClientHello unbound.\r\n\r\nHowever, we've since decided not to allow PSKs in the outer ClientHello. Perhaps we should revisit this. Suppose the AD parameter to the ECH decryption were the entire outer ClientHello, minus the ECH extension. I believe this means we no longer need OuterExtensions.inner_digest. That would give an immediate 33-byte savings. It would then unlock a further 32 byte savings by amending #312 to say:\r\n\r\n* Client always encodes an empty legacy_session_id in ECH plaintext.\r\n* Client-facing server copies outer legacy_session_id to inner ClientHello as part of decompression.\r\n\r\n(The reason we can't do this easily right now is that, if the inner ClientHello lacks outer_extension, nothing's authenticating legacy_session_id. Since the field in TLS 1.3 is all but ignored, it's \"obvious\" that the malleability doesn't matter, but it's nicer to not need to think about such things.)\r\n\r\nFrom looking at Chrome's ClientHellos and working through what we'd send (drop 1.2-only extensions, compress most), it looks like the inner ClientHello will be maybe 130-140 bytes, plus a padded server_name. The 65 bytes above would almost halve the overhead.\r\n\r\nIn some sense what's going on here is our 16-byte tag on the AEAD in the ECH ciphertext is going to waste. We didn't authenticate everything that goes into reconstructing the inner ClientHello (outer_extensions), so instead we authenticate another hash (OuterExtensions.inner_digest) and check that afterwards. (To that end, if we do this, we probably need to say the server MUST reject encrypted_client_hello showing up in outer_extensions, that way all inputs to decompression are authenticated. Equivalently, decompression is done relative to the ECH-extension-less AD input rather than the original outer ClientHello.)",
       "createdAt": "2020-10-05T23:22:06Z",
-      "updatedAt": "2020-10-08T01:16:41Z",
+      "updatedAt": "2020-10-09T15:57:30Z",
       "closedAt": null,
       "comments": [
         {
@@ -7506,6 +7506,34 @@
           "body": "> Filling it with zeros, as @bemasc pointed out to me, requires predicting the length of the encrypted inner ClientHello. This isn't strictly impossible (ADs don't change ciphertext length), but it seems needlessly fussy and ECH is already requiring we be able re-encode ClientHellos, lengths and all.\r\n\r\nOn second thought, a lot of implementations will need to do that prediction anyway. The workaround for the old F5 bug means we'll need to know the eventual size for the padding extension. (On the other hand, you can probably assume anyone doing ECH is not running those things. On the other hand, turning off the workaround would stick out.) Ah well. We did it for PSK already.\r\n\r\n(I wonder if we can do drop that workaround now that TLS 1.0 and 1.1 are gone...)",
           "createdAt": "2020-10-08T01:16:40Z",
           "updatedAt": "2020-10-08T01:16:40Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "What's the \"old F5 bug\"?\r\nWhat's the value in authenticating the length of the \"encrypted_client_hello\" extension? This is authenticated by the handshake already, no?",
+          "createdAt": "2020-10-08T22:23:55Z",
+          "updatedAt": "2020-10-08T22:23:55Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> What's the \"old F5 bug\"?\r\n\r\nhttps://www.imperialviolet.org/2013/10/07/f5update.html\r\nhttps://mailarchive.ietf.org/arch/msg/tls/8wXwhM1d5WSmROHFSgrTyFmWN2o/\r\nIt's why we have a padding extension.\r\n\r\n> What's the value in authenticating the length of the \"encrypted_client_hello\" extension? This is authenticated by the handshake already, no?\r\n\r\nThere isn't. It's just a question of what's easier to deal with. Filling it with zeros means that, when computing the AD on the receiving side, you don't need to fully reconstruct a modified outer ClientHello with updated length prefixes. We avoided this when computing the PSK binder in RFC8446.\r\n\r\nIt's a mild hassle but not a huge deal. More importantly, we've thoroughly given up on that elsewhere in the spec. The F5 padding business also means computing this AD will likely take some length prediction anyway, but so it goes.",
+          "createdAt": "2020-10-09T02:10:16Z",
+          "updatedAt": "2020-10-09T02:21:18Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I agree, it's not a big hassle.",
+          "createdAt": "2020-10-09T15:23:53Z",
+          "updatedAt": "2020-10-09T15:23:53Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> I like this idea. How do you think the AD ought to be structured? The ClientHelloOuter, but with an an empty \"encrypted_client_hello\" extension?\r\n\r\nRather than make the extension empty, can we just omit the `enc` and `payload` fields? (The `cipher_suite` and `config_id` should arguably be included, a la #326).",
+          "createdAt": "2020-10-09T15:57:29Z",
+          "updatedAt": "2020-10-09T15:57:29Z"
         }
       ]
     },
@@ -7552,7 +7580,7 @@
       "labels": [],
       "body": "If a server implements ECH decryption via an RPC call, it's possible for the client's ECH keys to be valid for CH1 but invalid for CH2, perhaps due to a race condition that updates the server's keys across these messages. This should be exceedingly rare in practice, so failing the connection with an alert is probably fine, but we should probably be clear about this.\r\n\r\ncc @cjpatton ",
       "createdAt": "2020-10-06T00:59:13Z",
-      "updatedAt": "2020-10-07T17:40:48Z",
+      "updatedAt": "2020-10-08T20:08:56Z",
       "closedAt": null,
       "comments": [
         {
@@ -7568,6 +7596,13 @@
           "body": "Is this any different from, say, the server's cipher suite capabilities changing in between CH1 and CH2 and thus the server not being able to meet what they said with HRR?\r\n\r\nI guess I've always assumed that, within the context of a single \"handshake\" from the perspective of the client, we expect the server to behave self-consistently and, if it can't, I guess the server can internal_error and live with failing one or two connections across server restarts.",
           "createdAt": "2020-10-07T17:40:48Z",
           "updatedAt": "2020-10-07T17:40:48Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> Is this any different from, say, the server's cipher suite capabilities changing in between CH1 and CH2 and thus the server not being able to meet what they said with HRR?\r\n\r\nI think this is a little different, since it can be triggered by changing the set of ECHConfigs the server knows, and not necessarily the set of cipher suites.\r\n\r\n> I guess I've always assumed that, within the context of a single \"handshake\" from the perspective of the client, we expect the server to behave self-consistently and, if it can't, I guess the server can internal_error and live with failing one or two connections across server restarts.\r\n\r\nI agree. And even though the situation is a bit different, I think \"internal_error\" is appropriate here as well. However, I also think the client SHOULD NOT change the ECHConfig across HRR. If it does, I think the server SHOULD abort with \"illegal_paramter\". \r\n\r\nDo you think this would be hard for the server to enforce? In particular, a QUIC server might want to handle the HRR path statelessly, and this check requires remembering the previous `config_id`.\r\n\r\n",
+          "createdAt": "2020-10-08T20:08:56Z",
+          "updatedAt": "2020-10-08T20:08:56Z"
         }
       ]
     },
@@ -7594,6 +7629,38 @@
           "updatedAt": "2020-10-07T16:48:01Z"
         }
       ]
+    },
+    {
+      "number": 329,
+      "id": "MDU6SXNzdWU3MTc4MDk1OTY=",
+      "title": "ClientHello construction order is inconsistent",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/329",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I noticed this while drafting a PR for #323. We're a little inconsistent about whether the ClientHelloInner or ClientHelloOuter is constructed first.\r\n\r\nSection 4 says inner before outer:\r\n> When a client wants to establish a TLS session with the backend server, it constructs its ClientHello as usual (we will refer to this as the ClientHelloInner message) and then encrypts this message using the public key of the ECH configuration. It then constructs a new ClientHello (ClientHelloOuter)\r\n\r\nSection 5.1 implies inner before outer:\r\n> When sending ClientHello, the client first computes ClientHelloInner, including any PSK binders, and then MAY substitute extensions which it knows will be duplicated in ClientHelloOuter.\r\n\r\nBut section 6.1 says outer before inner:\r\n> Next, the client constructs the ClientHelloOuter message just as it does a standard ClientHello, with the exception of the following rules:\r\n> ...\r\n> The client then constructs the ClientHelloInner message just as it does a standard ClientHello, with the exception of the following rules:\r\n\r\nI think inner before outer makes more sense. You certainly can't finish the outer one before you've computed the inner one. (Of course, an implementation can pick whatever order is most convenient, but I think the spec should be consistent with itself.)",
+      "createdAt": "2020-10-09T02:52:06Z",
+      "updatedAt": "2020-10-09T02:52:06Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 331,
+      "id": "MDU6SXNzdWU3MTc4MTI3NjU=",
+      "title": "Encoded vs actual ClientHelloInner is a little ambiguous",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/331",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "There are two ClientHelloInners, the actual one used in the handshake, and the encoded one with outer_extensions substituted in. Both are described as ClientHelloInner, but this makes it slightly ambiguous which goes into, say, the handshake transcript.\r\n\r\n(It's late now, so I'll leave this as an issue without a PR. If we don't end up resolving this separately, I'll probably fix this as part of #323. If we decide to implicitly copy over legacy_session_id, the encryption payload becomes less and less defensibly an actual ClientHelloInner.)",
+      "createdAt": "2020-10-09T03:02:34Z",
+      "updatedAt": "2020-10-09T03:02:34Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -24640,7 +24707,7 @@
       "labels": [],
       "body": "The \"outer_extension\" mechanism doesn't preserve the order of extensions in the ClientHelloInner. This change replaces it with a mechanism that does.\r\n\r\nThis addresses #262 and might impact #263.",
       "createdAt": "2020-09-02T01:30:33Z",
-      "updatedAt": "2020-09-22T02:16:54Z",
+      "updatedAt": "2020-10-09T15:29:19Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "3426cfbf3f25bd2aa23a13e8700702717c05a42f",
@@ -24665,6 +24732,41 @@
           "body": "To recap my comments at the mic: I think we should go back and ask what extensions will actually benefit from this treatment in typical client hello. The only example I am aware of is KeyShare (and principally only PQ). And so my put would be to go with the simplest thing that covers most of these cases. If all we have is KeyShare, then I think requiring things to be contiguous is good enough, in that if we end up with CompressibleExtension2 in future people can just serialize it next to KeyShare.\r\n",
           "createdAt": "2020-09-03T17:54:20Z",
           "updatedAt": "2020-09-03T17:57:28Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Closing this in favor of @davidben's suggestion in this issue: #323.",
+          "createdAt": "2020-10-09T00:20:14Z",
+          "updatedAt": "2020-10-09T00:20:14Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Sorry, brain fart. This isn't closed by a solution to #323.",
+          "createdAt": "2020-10-09T00:22:08Z",
+          "updatedAt": "2020-10-09T00:22:08Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> I think we should go back and ask what extensions will actually benefit from this treatment in typical client hello.\r\n\r\nI'd actually argue the opposite. Most extensions don't actually benefit from being sent twice because they're the same across every connection made by that client. Even an empty extension costs four bytes normally and (marginally) costs two bytes compressed. Shrinking the ciphertext not only saves bytes for ECH ClientHellos, but it makes it cheaper to add GREASE to non-ECH ClientHellos.\r\n\r\nRegardless, I agree with your conclusion:\r\n\r\n>  If all we have is KeyShare, then I think requiring things to be contiguous is good enough, in that if we end up with CompressibleExtension2 in future people can just serialize it next to KeyShare.\r\n\r\nThe only extension with an ordering constraint is PSK, which would never be compressed anyway. The client can fiddle with the order as needed to compress the extensions it wants to compress.\r\n\r\n> Sorry, brain fart. This isn't closed by a solution to #323.\r\n\r\n#323 might open up a few more options by removing inner_digest, like including multiple outer_extensions if you want to compress multiple runs of extensions. (I think that was an earlier design?) That said, I agree with @ekr that the ordering thing isn't a big deal.",
+          "createdAt": "2020-10-09T02:16:35Z",
+          "updatedAt": "2020-10-09T02:17:45Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Ordering is no longer an issue if we're authenticating ClientHelloOuter as described in #323. It does matter to an extent if we're binding outer extensions by hashing the fully formed ClientHelloInner. In particular, the client needs to ensure that inner_digest is the hash of whatever ClientHelloInner is decompressed by the server.\r\n\r\nIn any case, a solution to #323 would make the motivation for this PR largely irrelevant.",
+          "createdAt": "2020-10-09T15:19:46Z",
+          "updatedAt": "2020-10-09T15:19:46Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "#323 doesn't save you from matching the order. It is a requirement in the handshake itself that the client and server act on a byte-for-byte identical ClientHelloInner. It goes in the handshake transcript.",
+          "createdAt": "2020-10-09T15:27:26Z",
+          "updatedAt": "2020-10-09T15:29:19Z"
         }
       ],
       "reviews": [
@@ -25867,7 +25969,7 @@
       "labels": [],
       "body": "Closes #264.",
       "createdAt": "2020-09-30T18:51:06Z",
-      "updatedAt": "2020-10-06T12:32:15Z",
+      "updatedAt": "2020-10-08T19:03:41Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "32ce20a4a0e256733d03ec56cd8081df1d794012",
@@ -25899,6 +26001,13 @@
           "body": "> And the concern is that clients will enforce that MUST, so that you can't use extension 21 here?\r\n\r\nFrom discussion in #264, it seems overall simpler to just burn an extension code point rather than change existing behavior in code and text.",
           "createdAt": "2020-10-06T12:32:15Z",
           "updatedAt": "2020-10-06T12:32:15Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "BoringSSL clients enforce that MUST. Dunno about others. (In general, we don't allow server extensions we don't expect, and we don't expect server padding extensions.)",
+          "createdAt": "2020-10-08T19:03:41Z",
+          "updatedAt": "2020-10-08T19:03:41Z"
         }
       ],
       "reviews": [
@@ -27616,6 +27725,58 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 328,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTAwMjk3NjEy",
+      "title": "Define error-handling for missing outer extension",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/328",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Looks like this was missing.",
+      "createdAt": "2020-10-09T02:04:08Z",
+      "updatedAt": "2020-10-09T02:04:08Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "172ab91cc20dc5e3046d946ddad28a951673f2e7",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "missing-outer-extension",
+      "headRefOid": "67431a639f1f9d65569db4503c81fd53d53d2bc8",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 330,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTAwMzEwODQ4",
+      "title": "Consistently construct ClientHelloInner before ClientHelloOuter.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/330",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #329.",
+      "createdAt": "2020-10-09T02:58:34Z",
+      "updatedAt": "2020-10-09T02:58:34Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "172ab91cc20dc5e3046d946ddad28a951673f2e7",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "inner-before-outer",
+      "headRefOid": "0759a658bac13d5c63a115d149fb29a74c1eea47",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
