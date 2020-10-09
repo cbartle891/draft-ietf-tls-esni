@@ -5,11 +5,11 @@
 tls                                                          E. Rescorla
 Internet-Draft                                                RTFM, Inc.
 Intended status: Standards Track                                  K. Oku
-Expires: 11 April 2021                                            Fastly
+Expires: 12 April 2021                                            Fastly
                                                              N. Sullivan
                                                                C.A. Wood
                                                               Cloudflare
-                                                          8 October 2020
+                                                          9 October 2020
 
 
                        TLS Encrypted Client Hello
@@ -35,7 +35,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 11 April 2021.
+   This Internet-Draft will expire on 12 April 2021.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Rescorla, et al.          Expires 11 April 2021                 [Page 1]
+Rescorla, et al.          Expires 12 April 2021                 [Page 1]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Rescorla, et al.          Expires 11 April 2021                 [Page 2]
+Rescorla, et al.          Expires 12 April 2021                 [Page 2]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -165,7 +165,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                 [Page 3]
+Rescorla, et al.          Expires 12 April 2021                 [Page 3]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -221,7 +221,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                 [Page 4]
+Rescorla, et al.          Expires 12 April 2021                 [Page 4]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -277,7 +277,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                 [Page 5]
+Rescorla, et al.          Expires 12 April 2021                 [Page 5]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -333,7 +333,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                 [Page 6]
+Rescorla, et al.          Expires 12 April 2021                 [Page 6]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -346,8 +346,9 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 4.  Encrypted ClientHello Configuration
 
-   ECH uses HPKE for public key encryption [I-D.irtf-cfrg-hpke].  The
-   ECH configuration is defined by the following "ECHConfigs" structure.
+   ECH uses draft-05 of HPKE for public key encryption
+   [I-D.irtf-cfrg-hpke].  The ECH configuration is defined by the
+   following "ECHConfigs" structure.
 
        opaque HpkePublicKey<1..2^16-1>;
        uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
@@ -385,14 +386,15 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    to support multiple versions of ECH and multiple sets of ECH
    parameters.
 
-   The "ECHConfig" structure contains the following fields:
 
 
 
-Rescorla, et al.          Expires 11 April 2021                 [Page 7]
+Rescorla, et al.          Expires 12 April 2021                 [Page 7]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
+
+   The "ECHConfig" structure contains the following fields:
 
    version  The version of ECH for which this configuration is used.
       Beginning with draft-08, the version is the same as the code point
@@ -438,18 +440,20 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    additional functionality as needed.  See Section 12 for guidance on
    which types of extensions are appropriate for this structure.
 
-   The format is as defined in [RFC8446], Section 4.2.  The same
-   interpretation rules apply: extensions MAY appear in any order, but
-   there MUST NOT be more than one extension of the same type in the
-   extensions block.  An extension can be tagged as mandatory by using
 
 
 
-Rescorla, et al.          Expires 11 April 2021                 [Page 8]
+
+
+Rescorla, et al.          Expires 12 April 2021                 [Page 8]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
+   The format is as defined in [RFC8446], Section 4.2.  The same
+   interpretation rules apply: extensions MAY appear in any order, but
+   there MUST NOT be more than one extension of the same type in the
+   extensions block.  An extension can be tagged as mandatory by using
    an extension type codepoint with the high order bit set to 1.  A
    client that receives a mandatory extension they do not understand
    MUST reject the "ECHConfig" content.
@@ -494,17 +498,15 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
       corresponding "payload" field.
 
    payload  The serialized and encrypted ClientHelloInner structure,
-      encrypted using HPKE as described in Section 6.1.
 
 
 
-
-
-
-Rescorla, et al.          Expires 11 April 2021                 [Page 9]
+Rescorla, et al.          Expires 12 April 2021                 [Page 9]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
+
+      encrypted using HPKE as described in Section 6.1.
 
    When offering the "encrypted_client_hello" extension in its
    ClientHelloOuter, the client MUST also offer an empty
@@ -555,9 +557,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-
-
-Rescorla, et al.          Expires 11 April 2021                [Page 10]
+Rescorla, et al.          Expires 12 April 2021                [Page 10]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -613,7 +613,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 11]
+Rescorla, et al.          Expires 12 April 2021                [Page 11]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -669,7 +669,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 12]
+Rescorla, et al.          Expires 12 April 2021                [Page 12]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -725,7 +725,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 13]
+Rescorla, et al.          Expires 12 April 2021                [Page 13]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -781,7 +781,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 14]
+Rescorla, et al.          Expires 12 April 2021                [Page 14]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -837,7 +837,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 15]
+Rescorla, et al.          Expires 12 April 2021                [Page 15]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -893,7 +893,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 16]
+Rescorla, et al.          Expires 12 April 2021                [Page 16]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -949,7 +949,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 17]
+Rescorla, et al.          Expires 12 April 2021                [Page 17]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1005,7 +1005,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 18]
+Rescorla, et al.          Expires 12 April 2021                [Page 18]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1061,7 +1061,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 19]
+Rescorla, et al.          Expires 12 April 2021                [Page 19]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1117,7 +1117,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 20]
+Rescorla, et al.          Expires 12 April 2021                [Page 20]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1173,7 +1173,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 21]
+Rescorla, et al.          Expires 12 April 2021                [Page 21]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1229,7 +1229,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 22]
+Rescorla, et al.          Expires 12 April 2021                [Page 22]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1285,7 +1285,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 23]
+Rescorla, et al.          Expires 12 April 2021                [Page 23]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1341,7 +1341,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 24]
+Rescorla, et al.          Expires 12 April 2021                [Page 24]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1397,7 +1397,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 25]
+Rescorla, et al.          Expires 12 April 2021                [Page 25]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1453,7 +1453,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 26]
+Rescorla, et al.          Expires 12 April 2021                [Page 26]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1509,7 +1509,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 27]
+Rescorla, et al.          Expires 12 April 2021                [Page 27]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1565,7 +1565,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 28]
+Rescorla, et al.          Expires 12 April 2021                [Page 28]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1621,7 +1621,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 29]
+Rescorla, et al.          Expires 12 April 2021                [Page 29]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1677,7 +1677,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 30]
+Rescorla, et al.          Expires 12 April 2021                [Page 30]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1733,7 +1733,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 31]
+Rescorla, et al.          Expires 12 April 2021                [Page 31]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1789,7 +1789,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 32]
+Rescorla, et al.          Expires 12 April 2021                [Page 32]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1845,7 +1845,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 33]
+Rescorla, et al.          Expires 12 April 2021                [Page 33]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1901,7 +1901,7 @@ A.1.1.  TLS in Early Data
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 34]
+Rescorla, et al.          Expires 12 April 2021                [Page 34]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -1957,7 +1957,7 @@ Appendix B.  Acknowledgements
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 35]
+Rescorla, et al.          Expires 12 April 2021                [Page 35]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
@@ -2013,4 +2013,4 @@ Authors' Addresses
 
 
 
-Rescorla, et al.          Expires 11 April 2021                [Page 36]
+Rescorla, et al.          Expires 12 April 2021                [Page 36]
