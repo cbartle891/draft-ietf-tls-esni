@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2020-10-09T15:59:55.089054+00:00",
+  "timestamp": "2020-10-11T11:23:19.424535+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -7476,7 +7476,7 @@
       "labels": [],
       "body": "We previously decided not to bind the outer ClientHello to the ECH decryption, because doing so is rather a hassle. We'd need something similar to the TLS 1.3 PSK binder mess, with the added complexity of ordering relative to the PSK binders themselves. Additionally, while the binding helps with some of the don't stick out properties, there were other attacks on distinguishability anyway. So, instead, we mitigated the inner ClientHello malleability with OuterExtensions.inner_digest and left the outer ClientHello unbound.\r\n\r\nHowever, we've since decided not to allow PSKs in the outer ClientHello. Perhaps we should revisit this. Suppose the AD parameter to the ECH decryption were the entire outer ClientHello, minus the ECH extension. I believe this means we no longer need OuterExtensions.inner_digest. That would give an immediate 33-byte savings. It would then unlock a further 32 byte savings by amending #312 to say:\r\n\r\n* Client always encodes an empty legacy_session_id in ECH plaintext.\r\n* Client-facing server copies outer legacy_session_id to inner ClientHello as part of decompression.\r\n\r\n(The reason we can't do this easily right now is that, if the inner ClientHello lacks outer_extension, nothing's authenticating legacy_session_id. Since the field in TLS 1.3 is all but ignored, it's \"obvious\" that the malleability doesn't matter, but it's nicer to not need to think about such things.)\r\n\r\nFrom looking at Chrome's ClientHellos and working through what we'd send (drop 1.2-only extensions, compress most), it looks like the inner ClientHello will be maybe 130-140 bytes, plus a padded server_name. The 65 bytes above would almost halve the overhead.\r\n\r\nIn some sense what's going on here is our 16-byte tag on the AEAD in the ECH ciphertext is going to waste. We didn't authenticate everything that goes into reconstructing the inner ClientHello (outer_extensions), so instead we authenticate another hash (OuterExtensions.inner_digest) and check that afterwards. (To that end, if we do this, we probably need to say the server MUST reject encrypted_client_hello showing up in outer_extensions, that way all inputs to decompression are authenticated. Equivalently, decompression is done relative to the ECH-extension-less AD input rather than the original outer ClientHello.)",
       "createdAt": "2020-10-05T23:22:06Z",
-      "updatedAt": "2020-10-09T15:57:30Z",
+      "updatedAt": "2020-10-09T21:06:07Z",
       "closedAt": null,
       "comments": [
         {
@@ -7534,6 +7534,34 @@
           "body": "> I like this idea. How do you think the AD ought to be structured? The ClientHelloOuter, but with an an empty \"encrypted_client_hello\" extension?\r\n\r\nRather than make the extension empty, can we just omit the `enc` and `payload` fields? (The `cipher_suite` and `config_id` should arguably be included, a la #326).",
           "createdAt": "2020-10-09T15:57:29Z",
           "updatedAt": "2020-10-09T15:57:29Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "That works, though it's even more fussy for the client to construct, since it needs to half-encode the ECH extension before fully encoding it.\r\n\r\n`cipher_suite` is already bound into HPKE itself. `config_id` is less clear, but I thought our model already said all this didn't matter? Isn't the binding here just to replace `inner_digest` and provide malleability? If there's something more going on, I'd like us to have some principled answer here, so we can answer questions like... what about the handshake transcript, which may not be empty on HRR? If we do that, what's going on with ech_hrr_key?",
+          "createdAt": "2020-10-09T17:23:12Z",
+          "updatedAt": "2020-10-09T17:23:12Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "The principle I was following is: include as much as possible in the AD. Yeah, it's more of a pain, and we've gotten away with *no* binding whatsoever up to now, so maybe we don't need it. I'm happy to start with an empty ECH extension and then consider the other parts later, if that'll help.",
+          "createdAt": "2020-10-09T18:51:55Z",
+          "updatedAt": "2020-10-09T18:51:55Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I don't feel very strongly either way.",
+          "createdAt": "2020-10-09T18:57:14Z",
+          "updatedAt": "2020-10-09T18:57:14Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Let's just do the simpler thing now, then! :-)",
+          "createdAt": "2020-10-09T21:06:07Z",
+          "updatedAt": "2020-10-09T21:06:07Z"
         }
       ]
     },
@@ -7580,7 +7608,7 @@
       "labels": [],
       "body": "If a server implements ECH decryption via an RPC call, it's possible for the client's ECH keys to be valid for CH1 but invalid for CH2, perhaps due to a race condition that updates the server's keys across these messages. This should be exceedingly rare in practice, so failing the connection with an alert is probably fine, but we should probably be clear about this.\r\n\r\ncc @cjpatton ",
       "createdAt": "2020-10-06T00:59:13Z",
-      "updatedAt": "2020-10-08T20:08:56Z",
+      "updatedAt": "2020-10-09T20:34:27Z",
       "closedAt": null,
       "comments": [
         {
@@ -7603,6 +7631,20 @@
           "body": "> Is this any different from, say, the server's cipher suite capabilities changing in between CH1 and CH2 and thus the server not being able to meet what they said with HRR?\r\n\r\nI think this is a little different, since it can be triggered by changing the set of ECHConfigs the server knows, and not necessarily the set of cipher suites.\r\n\r\n> I guess I've always assumed that, within the context of a single \"handshake\" from the perspective of the client, we expect the server to behave self-consistently and, if it can't, I guess the server can internal_error and live with failing one or two connections across server restarts.\r\n\r\nI agree. And even though the situation is a bit different, I think \"internal_error\" is appropriate here as well. However, I also think the client SHOULD NOT change the ECHConfig across HRR. If it does, I think the server SHOULD abort with \"illegal_paramter\". \r\n\r\nDo you think this would be hard for the server to enforce? In particular, a QUIC server might want to handle the HRR path statelessly, and this check requires remembering the previous `config_id`.\r\n\r\n",
           "createdAt": "2020-10-08T20:08:56Z",
           "updatedAt": "2020-10-08T20:08:56Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> However, I also think the client SHOULD NOT change the ECHConfig across HRR.\r\n\r\nI think that's already true. The client can't change things across HRR unless explicitly allowed. (https://tools.ietf.org/html/rfc8446#section-4.1.2)\r\n\r\n> If it does, I think the server SHOULD abort with \"illegal_parameter\".\r\n\r\nExactly what the server enforces on HRR is... all over the place. I'm normally in favor of maximal enforcement, but enforcing all the rules of HRR is such a mess. It's especially messy for folks who do stateless HRR, because any state carried over across the two increases the size of the cookie. So I think we need to be a little careful here. Honestly, I think we didn't really get HRR right.\r\n\r\n> In particular, a QUIC server might want to handle the HRR path statelessly, and this check requires remembering the previous config_id.\r\n\r\nQUIC does not care about stateless HRR. It did in the original design, but that's been dropped. DTLS does, though. And I believe NSS always implements it statelessly? (BoringSSL currently only does stateful.)",
+          "createdAt": "2020-10-09T19:04:20Z",
+          "updatedAt": "2020-10-09T19:04:20Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "It sounds like a weak \"MAY\" would be most appropriate.",
+          "createdAt": "2020-10-09T20:34:27Z",
+          "updatedAt": "2020-10-09T20:34:27Z"
         }
       ]
     },
@@ -7635,15 +7677,15 @@
       "id": "MDU6SXNzdWU3MTc4MDk1OTY=",
       "title": "ClientHello construction order is inconsistent",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/329",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "davidben",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "I noticed this while drafting a PR for #323. We're a little inconsistent about whether the ClientHelloInner or ClientHelloOuter is constructed first.\r\n\r\nSection 4 says inner before outer:\r\n> When a client wants to establish a TLS session with the backend server, it constructs its ClientHello as usual (we will refer to this as the ClientHelloInner message) and then encrypts this message using the public key of the ECH configuration. It then constructs a new ClientHello (ClientHelloOuter)\r\n\r\nSection 5.1 implies inner before outer:\r\n> When sending ClientHello, the client first computes ClientHelloInner, including any PSK binders, and then MAY substitute extensions which it knows will be duplicated in ClientHelloOuter.\r\n\r\nBut section 6.1 says outer before inner:\r\n> Next, the client constructs the ClientHelloOuter message just as it does a standard ClientHello, with the exception of the following rules:\r\n> ...\r\n> The client then constructs the ClientHelloInner message just as it does a standard ClientHello, with the exception of the following rules:\r\n\r\nI think inner before outer makes more sense. You certainly can't finish the outer one before you've computed the inner one. (Of course, an implementation can pick whatever order is most convenient, but I think the spec should be consistent with itself.)",
       "createdAt": "2020-10-09T02:52:06Z",
-      "updatedAt": "2020-10-09T02:52:06Z",
-      "closedAt": null,
+      "updatedAt": "2020-10-11T11:22:43Z",
+      "closedAt": "2020-10-11T11:22:43Z",
       "comments": []
     },
     {
@@ -7658,9 +7700,24 @@
       "labels": [],
       "body": "There are two ClientHelloInners, the actual one used in the handshake, and the encoded one with outer_extensions substituted in. Both are described as ClientHelloInner, but this makes it slightly ambiguous which goes into, say, the handshake transcript.\r\n\r\n(It's late now, so I'll leave this as an issue without a PR. If we don't end up resolving this separately, I'll probably fix this as part of #323. If we decide to implicitly copy over legacy_session_id, the encryption payload becomes less and less defensibly an actual ClientHelloInner.)",
       "createdAt": "2020-10-09T03:02:34Z",
-      "updatedAt": "2020-10-09T03:02:34Z",
+      "updatedAt": "2020-10-09T16:33:46Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "In my own implementation, I've been referring to the plaintext payload as CompressedClientHelloInner. Which is terrible, but unambiguous.",
+          "createdAt": "2020-10-09T16:17:34Z",
+          "updatedAt": "2020-10-09T16:17:34Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Works for me. I was thinking EncodedClientHelloInner because it's shorter and still works even if you choose not to compress anything. (A no-op encoding is still an encoding.)",
+          "createdAt": "2020-10-09T16:33:46Z",
+          "updatedAt": "2020-10-09T16:33:46Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -27731,52 +27788,265 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NTAwMjk3NjEy",
       "title": "Define error-handling for missing outer extension",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/328",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "davidben",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Looks like this was missing.",
       "createdAt": "2020-10-09T02:04:08Z",
-      "updatedAt": "2020-10-09T02:04:08Z",
+      "updatedAt": "2020-10-11T11:23:12Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "172ab91cc20dc5e3046d946ddad28a951673f2e7",
       "headRepository": "davidben/draft-ietf-tls-esni",
       "headRefName": "missing-outer-extension",
       "headRefOid": "67431a639f1f9d65569db4503c81fd53d53d2bc8",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2020-10-11T11:23:12Z",
+      "mergedAt": "2020-10-11T11:23:12Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "f38a6100acfc1f46f820db2eadfe614bd61afcb3"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA1OTc0MzQ1",
+          "commit": {
+            "abbreviatedOid": "67431a6"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-09T20:36:35Z",
+          "updatedAt": "2020-10-09T20:36:35Z",
+          "comments": []
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2MTY5NzM1",
+          "commit": {
+            "abbreviatedOid": "67431a6"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-11T11:23:06Z",
+          "updatedAt": "2020-10-11T11:23:06Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 330,
       "id": "MDExOlB1bGxSZXF1ZXN0NTAwMzEwODQ4",
       "title": "Consistently construct ClientHelloInner before ClientHelloOuter.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/330",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "davidben",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Closes #329.",
       "createdAt": "2020-10-09T02:58:34Z",
-      "updatedAt": "2020-10-09T02:58:34Z",
+      "updatedAt": "2020-10-11T11:22:43Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "172ab91cc20dc5e3046d946ddad28a951673f2e7",
       "headRepository": "davidben/draft-ietf-tls-esni",
       "headRefName": "inner-before-outer",
-      "headRefOid": "0759a658bac13d5c63a115d149fb29a74c1eea47",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "5d8096db40b58804eadf10692f7e3f7357768668",
+      "closedAt": "2020-10-11T11:22:43Z",
+      "mergedAt": "2020-10-11T11:22:43Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "8eea39d2ea732c534a6344fde12cf504011dced9"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA1ODExODI5",
+          "commit": {
+            "abbreviatedOid": "0759a65"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-09T16:09:44Z",
+          "updatedAt": "2020-10-09T16:09:45Z",
+          "comments": [
+            {
+              "originalPosition": 36,
+              "body": "This rule could be made more clear. Suggestion:\r\n> Any extension that appears in the payload of the \"outer_extensions\" extension of the ClientHelloInner MUST appear in the ClientHelloOuter.",
+              "createdAt": "2020-10-09T16:09:45Z",
+              "updatedAt": "2020-10-09T18:59:33Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA1ODU3MDk1",
+          "commit": {
+            "abbreviatedOid": "0759a65"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-09T17:16:50Z",
+          "updatedAt": "2020-10-09T17:16:50Z",
+          "comments": [
+            {
+              "originalPosition": 36,
+              "body": "I didn't want to talk about outer_extensions specifically appearing in ClientHelloInner because of #331. The ClientHelloInner doesn't really have outer_extensions, only the payload of the ECH extension. We haven't settled yet on text there, or a processing order of actually encrypting things (I'll need to fiddle with that as part of #323), so for now I figure citing the actual process was the least ambiguous.\r\n\r\nThe distinction is important because of which is actually used in the handshake. (Transcript and whatnot.)",
+              "createdAt": "2020-10-09T17:16:50Z",
+              "updatedAt": "2020-10-09T18:59:33Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA1ODU4ODQw",
+          "commit": {
+            "abbreviatedOid": "0759a65"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-09T17:19:33Z",
+          "updatedAt": "2020-10-09T17:19:33Z",
+          "comments": [
+            {
+              "originalPosition": 36,
+              "body": "Then I would just leave an \"OPEN ISSUE\" so we know to fix this later. ",
+              "createdAt": "2020-10-09T17:19:33Z",
+              "updatedAt": "2020-10-09T18:59:33Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA1OTIxMjM2",
+          "commit": {
+            "abbreviatedOid": "5d8096d"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-09T18:59:41Z",
+          "updatedAt": "2020-10-09T18:59:41Z",
+          "comments": [
+            {
+              "originalPosition": 36,
+              "body": "Done.",
+              "createdAt": "2020-10-09T18:59:41Z",
+              "updatedAt": "2020-10-09T18:59:41Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA1OTc0MTMy",
+          "commit": {
+            "abbreviatedOid": "5d8096d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-09T20:36:08Z",
+          "updatedAt": "2020-10-09T20:36:08Z",
+          "comments": []
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2MTY5NzAy",
+          "commit": {
+            "abbreviatedOid": "5d8096d"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-11T11:22:38Z",
+          "updatedAt": "2020-10-11T11:22:38Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 332,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTAwNjg0NzA5",
+      "title": "Note -05 of HPKE for this version of ECH.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/332",
+      "state": "MERGED",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "cc @cjpatton, @davidben ",
+      "createdAt": "2020-10-09T16:00:03Z",
+      "updatedAt": "2020-10-09T17:18:15Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "172ab91cc20dc5e3046d946ddad28a951673f2e7",
+      "headRepository": "tlswg/draft-ietf-tls-esni",
+      "headRefName": "caw/note-05",
+      "headRefOid": "dd583361acb0cc9d0e1097a225f22267d1d109e8",
+      "closedAt": "2020-10-09T17:18:14Z",
+      "mergedAt": "2020-10-09T17:18:14Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "066dc0a46a4a56adb84169504b4e24b8f77007f6"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA1ODA1OTE3",
+          "commit": {
+            "abbreviatedOid": "ea5b749"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-09T16:01:42Z",
+          "updatedAt": "2020-10-09T16:01:42Z",
+          "comments": [
+            {
+              "originalPosition": 6,
+              "body": "```suggestion\r\nECH uses draft-05 of HPKE for public key encryption {{!I-D.irtf-cfrg-hpke}}.\r\n```",
+              "createdAt": "2020-10-09T16:01:42Z",
+              "updatedAt": "2020-10-09T16:03:16Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA1ODMxMjE1",
+          "commit": {
+            "abbreviatedOid": "dd58336"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-09T16:37:26Z",
+          "updatedAt": "2020-10-09T16:37:26Z",
+          "comments": []
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA1ODU3NTc5",
+          "commit": {
+            "abbreviatedOid": "dd58336"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-09T17:17:37Z",
+          "updatedAt": "2020-10-09T17:17:37Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
