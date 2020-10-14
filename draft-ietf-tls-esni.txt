@@ -67,16 +67,16 @@ Table of Contents
      3.2.  Encrypted ClientHello (ECH) . . . . . . . . . . . . . . .   6
    4.  Encrypted ClientHello Configuration . . . . . . . . . . . . .   7
      4.1.  Configuration Extensions  . . . . . . . . . . . . . . . .   8
-   5.  The "encrypted_client_hello" extension  . . . . . . . . . . .   9
+   5.  The "encrypted_client_hello" Extension  . . . . . . . . . . .   9
      5.1.  Incorporating Outer Extensions  . . . . . . . . . . . . .  10
    6.  Client Behavior . . . . . . . . . . . . . . . . . . . . . . .  11
-     6.1.  Sending an encrypted ClientHello  . . . . . . . . . . . .  11
+     6.1.  Sending an Encrypted ClientHello  . . . . . . . . . . . .  11
      6.2.  Recommended Padding Scheme  . . . . . . . . . . . . . . .  13
-     6.3.  Handling the server response  . . . . . . . . . . . . . .  14
+     6.3.  Handling the Server Response  . . . . . . . . . . . . . .  14
        6.3.1.  Accepted ECH  . . . . . . . . . . . . . . . . . . . .  14
        6.3.2.  Rejected ECH  . . . . . . . . . . . . . . . . . . . .  14
        6.3.3.  HelloRetryRequest . . . . . . . . . . . . . . . . . .  16
-     6.4.  GREASE extensions . . . . . . . . . . . . . . . . . . . .  17
+     6.4.  GREASE Extensions . . . . . . . . . . . . . . . . . . . .  17
    7.  Server Behavior . . . . . . . . . . . . . . . . . . . . . . .  18
      7.1.  Client-Facing Server  . . . . . . . . . . . . . . . . . .  18
        7.1.1.  HelloRetryRequest . . . . . . . . . . . . . . . . . .  19
@@ -95,17 +95,17 @@ Table of Contents
      10.6.  Related Privacy Leaks  . . . . . . . . . . . . . . . . .  25
      10.7.  Attacks Exploiting Acceptance Confirmation . . . . . . .  25
      10.8.  Comparison Against Criteria  . . . . . . . . . . . . . .  26
-       10.8.1.  Mitigate against replay attacks  . . . . . . . . . .  26
-       10.8.2.  Avoid widely-deployed shared secrets . . . . . . . .  26
-       10.8.3.  Prevent SNI-based DoS attacks  . . . . . . . . . . .  26
-       10.8.4.  Do not stick out . . . . . . . . . . . . . . . . . .  26
-       10.8.5.  Forward secrecy  . . . . . . . . . . . . . . . . . .  27
-       10.8.6.  Proper security context  . . . . . . . . . . . . . .  27
-       10.8.7.  Split server spoofing  . . . . . . . . . . . . . . .  27
-       10.8.8.  Supporting multiple protocols  . . . . . . . . . . .  27
+       10.8.1.  Mitigate Cut-and-Paste Attacks . . . . . . . . . . .  26
+       10.8.2.  Avoid Widely Shared Secrets  . . . . . . . . . . . .  26
+       10.8.3.  Prevent SNI-Based Denial-of-Service Attacks  . . . .  26
+       10.8.4.  Do Not Stick Out . . . . . . . . . . . . . . . . . .  26
+       10.8.5.  Maintain Forward Secrecy . . . . . . . . . . . . . .  27
+       10.8.6.  Enable Multi-party Security Contexts . . . . . . . .  27
+       10.8.7.  Support Multiple Protocols . . . . . . . . . . . . .  27
      10.9.  Padding Policy . . . . . . . . . . . . . . . . . . . . .  27
      10.10. Active Attack Mitigations  . . . . . . . . . . . . . . .  28
        10.10.1.  Client Reaction Attack Mitigation . . . . . . . . .  28
+       10.10.2.  HelloRetryRequest Hijack Mitigation . . . . . . . .  29
 
 
 
@@ -114,7 +114,6 @@ Rescorla, et al.          Expires 17 April 2021                 [Page 2]
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
-       10.10.2.  HelloRetryRequest Hijack Mitigation . . . . . . . .  29
        10.10.3.  ClientHello Malleability Mitigation . . . . . . . .  30
    11. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  31
      11.1.  Update of the TLS ExtensionType Registry . . . . . . . .  31
@@ -155,13 +154,14 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    SNI remains the primary explicit signal used to determine the
    server's identity.
 
-   The TLS Working Group has studied the problem of protecting the SNI,
-   but has been unable to develop a completely generic solution.
-   [RFC8744] provides a description of the problem space and some of the
-   proposed techniques.  One of the more difficult problems is "Do not
-   stick out" ([RFC8744], Section 3.4): if only sensitive or private
-   services use SNI encryption, then SNI encryption is a signal that a
-   client is going to such a service.  For this reason, much recent work
+
+
+
+
+
+
+
+
 
 
 
@@ -170,6 +170,13 @@ Rescorla, et al.          Expires 17 April 2021                 [Page 3]
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
+   The TLS Working Group has studied the problem of protecting the SNI,
+   but has been unable to develop a completely generic solution.
+   [RFC8744] provides a description of the problem space and some of the
+   proposed techniques.  One of the more difficult problems is "Do not
+   stick out" ([RFC8744], Section 3.4): if only sensitive or private
+   services use SNI encryption, then SNI encryption is a signal that a
+   client is going to such a service.  For this reason, much recent work
    has focused on concealing the fact that the SNI is being protected.
    Unfortunately, the result often has undesirable performance
    consequences, incomplete coverage, or both.
@@ -208,13 +215,6 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    illustrated below, which we call "Shared Mode" and "Split Mode".
 
 3.1.  Topologies
-
-
-
-
-
-
-
 
 
 
@@ -462,7 +462,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    mandatory extensions.  If an unsupported mandatory extension is
    present, clients MUST ignore the "ECHConfig".
 
-5.  The "encrypted_client_hello" extension
+5.  The "encrypted_client_hello" Extension
 
    The encrypted ClientHelloInner is carried in an
    "encrypted_client_hello" extension, defined as follows:
@@ -589,7 +589,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 6.  Client Behavior
 
-6.1.  Sending an encrypted ClientHello
+6.1.  Sending an Encrypted ClientHello
 
    To offer ECH, the client first chooses a suitable ECH configuration.
    To determine if a given "ECHConfig" is suitable, it checks that it
@@ -742,7 +742,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    EncryptedExtension, so that handshake message also needs to be padded
    using TLS record layer padding.
 
-6.3.  Handling the server response
+6.3.  Handling the Server Response
 
    As described in Section 7, the server MAY either accept ECH and use
    ClientHelloInner or reject it and use ClientHelloOuter.  In handling
@@ -815,7 +815,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    "encrypted_client_hello" extension.  If the client does not retry in
    either scenario, it MUST report an error to the calling application.
 
-6.3.2.1.  Authenticating for the public name
+6.3.2.1.  Authenticating for the Public Name
 
    When the server rejects ECH or otherwise ignores
    "encrypted_client_hello" extension, it continues with the handshake
@@ -907,7 +907,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    integration with the backend server.  Stateless HRR on the client-
    facing server works fine, however.  See issue #333.]]
 
-6.4.  GREASE extensions
+6.4.  GREASE Extensions
 
    If the client attempts to connect to a server and does not have an
    ECHConfig structure available for the server, it SHOULD send a GREASE
@@ -1414,14 +1414,14 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    section, we re-iterate these requirements and assess the ECH design
    against them.
 
-10.8.1.  Mitigate against replay attacks
+10.8.1.  Mitigate Cut-and-Paste Attacks
 
    Since servers process either ClientHelloInner or ClientHelloOuter,
    and because ClientHelloInner.random is encrypted, it is not possible
    for an attacker to "cut and paste" the ECH value in a different
    Client Hello and learn information from ClientHelloInner.
 
-10.8.2.  Avoid widely-deployed shared secrets
+10.8.2.  Avoid Widely Shared Secrets
 
    This design depends upon DNS as a vehicle for semi-static public key
    distribution.  Server operators may partition their private keys
@@ -1432,7 +1432,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    by publishing different DNS records containing ECHConfig values with
    different keys using a short TTL.
 
-10.8.3.  Prevent SNI-based DoS attacks
+10.8.3.  Prevent SNI-Based Denial-of-Service Attacks
 
    This design requires servers to decrypt ClientHello messages with
    ClientECH extensions carrying valid digests.  Thus, it is possible
@@ -1440,7 +1440,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    attack is bound by the number of valid TCP connections an attacker
    can open.
 
-10.8.4.  Do not stick out
+10.8.4.  Do Not Stick Out
 
    The only explicit signal indicating possible use of ECH is the
    ClientHello "encrypted_client_hello" extension.  Server handshake
@@ -1462,36 +1462,38 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    Web browsers start using ECH, the presence of this value will not
    signal unusual behavior to passive eavesdroppers.
 
-10.8.5.  Forward secrecy
+10.8.5.  Maintain Forward Secrecy
 
    This design is not forward secret because the server's ECH key is
    static.  However, the window of exposure is bound by the key
    lifetime.  It is RECOMMENDED that servers rotate keys frequently.
 
-10.8.6.  Proper security context
+10.8.6.  Enable Multi-party Security Contexts
 
    This design permits servers operating in Split Mode to forward
-   connections directly to backend origin servers, thereby avoiding
-   unnecessary MiTM attacks.
+   connections directly to backend origin servers.  The client
+   authenticates the identity of the backend origin server, thereby
+   avoiding unnecessary MiTM attacks.
 
-10.8.7.  Split server spoofing
-
-   Assuming ECH records retrieved from DNS are authenticated, e.g., via
-   DNSSEC or fetched from a trusted Recursive Resolver, spoofing a
-   server operating in Split Mode is not possible.  See Section 10.2 for
-   more details regarding plaintext DNS.
+   Conversely, assuming ECH records retrieved from DNS are
+   authenticated, e.g., via DNSSEC or fetched from a trusted Recursive
+   Resolver, spoofing a client-facing server operating in Split Mode is
+   not possible.  See Section 10.2 for more details regarding plaintext
+   DNS.
 
    Authenticating the ECHConfigs structure naturally authenticates the
    included public name.  This also authenticates any retry signals from
-   the server because the client validates the server certificate
-   against the public name before retrying.
+   the client-facing server because the client validates the server
+   certificate against the public name before retrying.
 
-10.8.8.  Supporting multiple protocols
+10.8.7.  Support Multiple Protocols
 
    This design has no impact on application layer protocol negotiation.
    It may affect connection routing, server certificate selection, and
    client certificate verification.  Thus, it is compatible with
-   multiple protocols.
+   multiple application and transport protocols.  By encrypting the
+   entire ClientHello, this design additionally supports encrypting the
+   ALPN extension.
 
 10.9.  Padding Policy
 
@@ -1499,8 +1501,6 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    leak information about the corresponding plaintext.  Section 6.2
    describes a RECOMMENDED padding mechanism for clients aimed at
    reducing potential information leakage.
-
-
 
 
 
