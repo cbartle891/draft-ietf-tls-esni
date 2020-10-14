@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2020-10-11T11:23:19.424535+00:00",
+  "timestamp": "2020-10-14T20:04:06.517977+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -2391,12 +2391,12 @@
       "labels": [],
       "body": "We've recently developed a PoC for ESNI and we're having trouble pinning down what we're doing wrong since the test URL (https://cloudflare.com/cdn-cgi/trace) is still showing sni=off. \r\n\r\nI was wondering if CloudFlare is considering running a test/debug server to help us facilitate the development of various clients. ",
       "createdAt": "2018-11-05T13:46:41Z",
-      "updatedAt": "2019-11-06T22:02:21Z",
+      "updatedAt": "2020-10-13T12:40:32Z",
       "closedAt": "2019-06-02T15:08:29Z",
       "comments": [
         {
           "author": "sftcd",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "Same here - well, sorta, I've just got to where I've an openssl [build](https://github.com/sftcd/openssl/tree/master/esnistuff)  sending a CH with the ESNI extension in that seems maybe correctish;-)\r\n\r\nWould be great if there was a public server to bang against.",
           "createdAt": "2018-11-20T21:26:09Z",
           "updatedAt": "2018-11-20T21:26:09Z"
@@ -2410,7 +2410,7 @@
         },
         {
           "author": "sftcd",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "Ta - was trying cloudflare.net - www.cloudflare.com seems to get me a bit further. Off to debug so:-)",
           "createdAt": "2018-11-20T21:56:31Z",
           "updatedAt": "2018-11-20T21:56:31Z"
@@ -2431,7 +2431,7 @@
         },
         {
           "author": "sftcd",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "Hiya, I just put up a server based on my openssl code; see https://defo.ie/ for details. (I would've tried edit the wiki but didn't see a button;-)",
           "createdAt": "2019-06-14T15:04:00Z",
           "updatedAt": "2019-06-14T15:04:00Z"
@@ -2445,7 +2445,7 @@
         },
         {
           "author": "sftcd",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "Hiya, that works with my ``openssl s_client`` client... so long as you don't send me an HRR! (Which you seem to be doing about every 2nd time?) If you do send me an HRR, then my side doesn't do the right thing yet - my code admittedly did have a \"TODO: ... implement ... handling HRR\" comment;-) ",
           "createdAt": "2019-11-06T21:28:56Z",
           "updatedAt": "2019-11-06T21:28:56Z"
@@ -2456,6 +2456,20 @@
           "body": "Actual probability of HRR being sent depends on key shares received from client (but, yes, it can be near 1/2). What concerns HRR + ESNI - interestingly, the same happened in NSS and Firefox, I've encountered it while testing browsers against this same test server (fixed in NSS 3.43 release).",
           "createdAt": "2019-11-06T22:02:20Z",
           "updatedAt": "2019-11-06T22:02:20Z"
+        },
+        {
+          "author": "ValZapod",
+          "authorAssociation": "NONE",
+          "body": "@avened Is there some source code of your server available? Or is it already here https://github.com/tlswg/draft-ietf-tls-esni/wiki/ESNI-Implementations? \u041a\u043b\u0430\u0441\u0441\u043d\u0430\u044f \u0448\u0442\u0443\u043a\u0430 \u043a\u0441\u0442\u0430\u0442\u0438.",
+          "createdAt": "2020-10-13T08:24:59Z",
+          "updatedAt": "2020-10-13T08:24:59Z"
+        },
+        {
+          "author": "avened",
+          "authorAssociation": "NONE",
+          "body": "@ValZapod \r\n> Is there some source code of your server available? https://github.com/tlswg/draft-ietf-tls-esni/issues/118#issuecomment-707579615\r\n\r\nNo, not yet.\r\n\r\n> \u041a\u043b\u0430\u0441\u0441\u043d\u0430\u044f \u0448\u0442\u0443\u043a\u0430 \u043a\u0441\u0442\u0430\u0442\u0438.\r\n\r\n\u0421\u043f\u0430\u0441\u0438\u0431\u043e!",
+          "createdAt": "2020-10-13T12:40:32Z",
+          "updatedAt": "2020-10-13T12:40:32Z"
         }
       ]
     },
@@ -7608,7 +7622,7 @@
       "labels": [],
       "body": "If a server implements ECH decryption via an RPC call, it's possible for the client's ECH keys to be valid for CH1 but invalid for CH2, perhaps due to a race condition that updates the server's keys across these messages. This should be exceedingly rare in practice, so failing the connection with an alert is probably fine, but we should probably be clear about this.\r\n\r\ncc @cjpatton ",
       "createdAt": "2020-10-06T00:59:13Z",
-      "updatedAt": "2020-10-09T20:34:27Z",
+      "updatedAt": "2020-10-13T20:53:19Z",
       "closedAt": null,
       "comments": [
         {
@@ -7645,6 +7659,76 @@
           "body": "It sounds like a weak \"MAY\" would be most appropriate.",
           "createdAt": "2020-10-09T20:34:27Z",
           "updatedAt": "2020-10-09T20:34:27Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> It sounds like a weak \"MAY\" would be most appropriate.\r\n\r\nCan you elaborate?",
+          "createdAt": "2020-10-11T11:27:20Z",
+          "updatedAt": "2020-10-11T11:27:20Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Looking at this again, I suspect the minimal thing that needs to be checked across CH1 and CH2 is that the server cannot change its mind on whether it used ECH in CH2 and, if using ECH, it needs to have remembered ech_hrr_key (and HPKE cipher suites?) to bind the two. Dunno if it makes sense to just also remember the config_id at that point.",
+          "createdAt": "2020-10-11T15:34:35Z",
+          "updatedAt": "2020-10-11T15:34:35Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> , I suspect the minimal thing that needs to be checked across CH1 and CH2 is that the server cannot change its mind on whether it used ECH in CH2 and, if using ECH, it needs to have remembered ech_hrr_key (and HPKE cipher suites?) to bind the two. \r\n\r\nI agree, but I don't think tracking the `ech_hrr_key` is sufficient. Suppose the client sends an acceptable `config_id` in CH1 but a rejecting `config_id` in CH2. In this case `ech_hrr_key` doesn't provide the binding we need, since the client-facing server won't attempt to decrypt the payload in CH2.\r\n\r\nA conservative way to ensure the server doesn't change its mind is as follows:\r\n1. Require that the `cipher_suite` does not change across HRR. If it does, then abort with \"illegal_parameter\" alert.\\**\r\n1. Require that the `config_id` does not change across HRR. If it does, then abort with \"illegal_parameter\" alert.\r\n1. If `config_id` isn't recognized after HRR --- say because of key rotation -- then abort with \"internal_error\" alert.\r\n\r\n\\** I'm not sure 1. is strictly necessary. If the `cipher_suite` isn't supported by the ECH configuration, then the server would abort with \"illegal_parameter\". (This is already specified.) Moreover, I don't think we have any agility issues here, given that the derived AEAD key is bound to the cipher suite. However, this does ensure that the server chooses the HPKE cipher suite and KEM key in the same way before and after HRR. This may turn out to be useful.",
+          "createdAt": "2020-10-12T23:07:42Z",
+          "updatedAt": "2020-10-12T23:07:42Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> Suppose the client sends an acceptable config_id in CH1 but a rejecting config_id in CH2. In this case ech_hrr_key doesn't provide the binding we need, since the client-facing server won't attempt to decrypt the payload in CH2.\r\n\r\nRight, this is what I mean by \"the server cannot change its mind on whether it used ECH in CH2\". If you declined ECH in CH1, you ignore ECH in CH2. If you accepted ECH in CH1, failure to handle ECH in CH2 is fatal. But, yeah, if you remember the config used, you can check a bit more accurately, so maybe we should just do that and ask stateless HRRs make an even larger cookie. (Need to be a bit careful about `config_id` itself because we allow a trial decryption flow too.)",
+          "createdAt": "2020-10-13T03:15:30Z",
+          "updatedAt": "2020-10-13T03:22:24Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "For what it's worth, I'm not a huge fan of CH2 having a fresh HPKE exchange in the first place. That seems an unnecessary asymmetric operation. Were it not for stateless HRR, I think I'd advocate we just make CH2's ECH payload a second pop at the HPKE context's Seal() function (next sequence number), with the rest ignored. But with stateless HRR, we need to serialize the HPKE context into the cookie, which is mildly annoying.",
+          "createdAt": "2020-10-13T03:21:19Z",
+          "updatedAt": "2020-10-13T03:21:33Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I don't see how you can avoid CH2 having a new payload.  Unless you are looking to just perform address validation (DTLS), you only send HRR to correct something in the ClientHello.",
+          "createdAt": "2020-10-13T03:25:59Z",
+          "updatedAt": "2020-10-13T03:25:59Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> @martinthomson: I don't see how you can avoid CH2 having a new payload. Unless you are looking to just perform address validation (DTLS), you only send HRR to correct something in the ClientHello.\r\n\r\nI think what @davidben means is that the AEAD ciphertext could change without changing the encapsulating key. Hence, the ClientHelloInner can be changed without updating the HPKE shared secret.\r\n\r\n> @davidben: But with stateless HRR, we need to serialize the HPKE context into the cookie, which is mildly annoying.\r\n\r\nWouldn't this leak the HPKE encryption key? The cookie extension is transmitted in the HRR in plaintext, right?\r\n\r\n",
+          "createdAt": "2020-10-13T14:23:09Z",
+          "updatedAt": "2020-10-13T14:24:39Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": ">> @martinthomson: I don't see how you can avoid CH2 having a new payload. Unless you are looking to just perform address validation (DTLS), you only send HRR to correct something in the ClientHello.\r\n>\r\n> I think what @davidben means is that the AEAD ciphertext could change without changing the encapsulating key. Hence, the ClientHelloInner can be changed without updating the HPKE shared secret.\r\n\r\nSpecifically, HPKE supports multiple sequential encryption calls on a context with an internal sequence number.\r\nhttps://cfrg.github.io/draft-irtf-cfrg-hpke/draft-irtf-cfrg-hpke.html#name-encryption-and-decryption\r\n\r\n>> @davidben: But with stateless HRR, we need to serialize the HPKE context into the cookie, which is mildly annoying.\r\n>\r\n> Wouldn't this leak the HPKE encryption key? The cookie extension is transmitted in the HRR in plaintext, right?\r\n\r\nThe cookie already needs to encrypted and authenticated by the server like tickets. It certainly needs to be authenticated independent of ECH, otherwise the attacker can manipulate it anyway. And then the existing ech_hrr_key construction requires encryption too.\r\n\r\n(If you didn't encrypt the cookie for some reason and only MAC'd it, this design would allow you to, rather than serializing the HPKE encryption key, remember the expected HPKE config, redo the KEM operation, and bump the sequence number up. But if you're remembering some secret for the MAC, may as well encrypt it...)",
+          "createdAt": "2020-10-13T15:39:26Z",
+          "updatedAt": "2020-10-13T15:39:26Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> The cookie already needs to encrypted and authenticated by the server like tickets. \r\n\r\nRight, thanks for *again* clarifying a misunderstanding of mine about the TLS spec :)\r\n\r\nIncidentally, I brought up specifying HPKE context serialization here: https://github.com/cfrg/draft-irtf-cfrg-hpke/issues/161. There doesn't seem to be a lot of appetite for it. I suppose we could specify it in ECH, but there are so many use cases for it that I think it would be worth specifying it in the HPKE draft.",
+          "createdAt": "2020-10-13T16:12:19Z",
+          "updatedAt": "2020-10-13T16:12:19Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Given the uncertainty about stateless HRR pointed out in #333, let's permit the client-facing server to abort if ECH usage changes after HRR. This allows stateful-HRR servers to enforce this behavior, but leaves it as an \"OPEN ISSUE\" about how stateful-hRR servers will enforce this.\r\n\r\nI'll prepare a PR tomorrow or Thursday.",
+          "createdAt": "2020-10-13T20:53:18Z",
+          "updatedAt": "2020-10-13T20:53:18Z"
         }
       ]
     },
@@ -7653,15 +7737,15 @@
       "id": "MDU6SXNzdWU3MTUyNjA1MzA=",
       "title": "No encryption AD specified",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/326",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "chris-wood",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "@davidben mentions possibly binding the outer CH to the ECH encryption in #323. If we don't do that, we should at least bind the encryption to the non-encrypted parts of the ECH extension (`config_if`, `suite`, and so on).\r\n\r\ncc @cjpatton ",
+      "body": "@davidben mentions possibly binding the outer CH to the ECH encryption in #323. If we don't do that, we should at least bind the encryption to the non-encrypted parts of the ECH extension (`config_id`, `suite`, and so on).\r\n\r\ncc @cjpatton ",
       "createdAt": "2020-10-06T01:00:24Z",
-      "updatedAt": "2020-10-07T16:48:02Z",
-      "closedAt": null,
+      "updatedAt": "2020-10-11T11:24:55Z",
+      "closedAt": "2020-10-11T11:24:54Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -7669,6 +7753,13 @@
           "body": "I also like this idea :) AD is cheap.",
           "createdAt": "2020-10-07T16:48:01Z",
           "updatedAt": "2020-10-07T16:48:01Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Closing in favor of #323. We can revisit the ECH extension AD information later if desired.",
+          "createdAt": "2020-10-11T11:24:54Z",
+          "updatedAt": "2020-10-11T11:24:54Z"
         }
       ]
     },
@@ -7700,7 +7791,7 @@
       "labels": [],
       "body": "There are two ClientHelloInners, the actual one used in the handshake, and the encoded one with outer_extensions substituted in. Both are described as ClientHelloInner, but this makes it slightly ambiguous which goes into, say, the handshake transcript.\r\n\r\n(It's late now, so I'll leave this as an issue without a PR. If we don't end up resolving this separately, I'll probably fix this as part of #323. If we decide to implicitly copy over legacy_session_id, the encryption payload becomes less and less defensibly an actual ClientHelloInner.)",
       "createdAt": "2020-10-09T03:02:34Z",
-      "updatedAt": "2020-10-09T16:33:46Z",
+      "updatedAt": "2020-10-11T11:24:13Z",
       "closedAt": null,
       "comments": [
         {
@@ -7716,6 +7807,44 @@
           "body": "Works for me. I was thinking EncodedClientHelloInner because it's shorter and still works even if you choose not to compress anything. (A no-op encoding is still an encoding.)",
           "createdAt": "2020-10-09T16:33:46Z",
           "updatedAt": "2020-10-09T16:33:46Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "+1 to EncodedClientHelloInner, given that compression is optional. @davidben, if you have time, could you whip up a PR?",
+          "createdAt": "2020-10-11T11:24:13Z",
+          "updatedAt": "2020-10-11T11:24:13Z"
+        }
+      ]
+    },
+    {
+      "number": 333,
+      "id": "MDU6SXNzdWU3MTg4NjY1OTM=",
+      "title": "Stateless HRR and split mode",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/333",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I was thinking about #316 and the discussion on server HRR checks started by https://github.com/tlswg/draft-ietf-tls-esni/issues/325#issuecomment-705796082, and I'm not sure HRR cookies even work in split mode right now. First off, suppose we don't merge something like #316. The current text says:\r\n\r\n> Note: if the inner and outer ClientHellos use different groups for\r\n> their key shares or differ in some other way, then the HelloRetryRequest may\t\r\n> actually be invalid for one or the other ClientHello, in which case a fresh\t\r\n> ClientHello MUST be generated, ignoring the instructions in HelloRetryRequest.\t\r\n> Otherwise, the usual rules for HelloRetryRequest processing apply\r\n\r\nThis means if you get a cookied HRR only good for ClientHelloInner, there's no requirement to stick the cookie in ClientHelloOuter! But now the client-facing server can't see the cookie, so it can't be stateless. It would seem like #316 fixes this, but now we have a more fundamental problem: whose cookie?\r\n\r\nSuppose the client-facing server wishes to handle HRR statelessly. It decrypts the first ClientHelloInner and forwards it to the backend server. If the backend server responds with HRR, the client-facing server must forward the HRR as-is, or the transcript breaks. But the client-facing server has no opportunity to bind its state (ech_hrr_key) into the HRR cookie. (Perhaps there isn't even one. If there is, it's encrypted with the backend server's key anyway. Either way, it's fixed now.)\r\n\r\nThe simplest solution to all this is to only support stateful client-facing servers in split mode, unless the client-facing and backend servers can coordinate enough to share one cookie. I don't know if that would satisfy everyone. I could imagine doing something horrific to HRR.cookie, akin to what we did to ServerHello.random, but that sounds really messy.",
+      "createdAt": "2020-10-11T15:59:26Z",
+      "updatedAt": "2020-10-13T20:56:31Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Let's mark this as an \"OPEN ISSUE\" in the draft.",
+          "createdAt": "2020-10-13T20:46:03Z",
+          "updatedAt": "2020-10-13T20:46:03Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> Let's mark this as an \"OPEN ISSUE\" in the draft.\r\n\r\nDone. https://github.com/tlswg/draft-ietf-tls-esni/pull/338",
+          "createdAt": "2020-10-13T20:56:31Z",
+          "updatedAt": "2020-10-13T20:56:31Z"
         }
       ]
     }
@@ -26562,7 +26691,7 @@
       "labels": [],
       "body": "Closes #233.\r\n\r\nThis is limited to parameters applicable to TLS 1.3 and beyond. For example,\r\nTLS 1.2 ciphersuites may appear in ClientHelloOuter, so long as all TLS 1.3\r\nciphersuites in ClientHelloOuter match that in ClientHelloInner.\r\n\r\ncc @davidben, @cjpatton",
       "createdAt": "2020-09-30T23:25:50Z",
-      "updatedAt": "2020-10-06T13:39:26Z",
+      "updatedAt": "2020-10-13T19:55:51Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "e9c1bbd1acd13f1683f34fe0a51752da2c55cb6c",
@@ -26910,6 +27039,32 @@
               "body": "I agree with the above, but it's not clear to me what specifically you're suggesting. The *intent* of this change is to encompass any CH/SH extension that might change due to HRR, and we refer to those as \"HRR-sensitive\" parameters. \r\n\r\nCan you please clarify what specifically what you're looking for, ideally with suggested text?\r\n\r\n> This should probably be reflected somewhere, probably by updating RFC 8446.\r\n\r\nI don't think this needs to update RFC8446. The HRR language in that document is somewhat unclear as-is, so it probably makes more sense to tackle this in rfc8446-bis.",
               "createdAt": "2020-10-06T13:39:25Z",
               "updatedAt": "2020-10-06T13:39:26Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA3NzczOTU4",
+          "commit": {
+            "abbreviatedOid": "7b41099"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-13T19:47:36Z",
+          "updatedAt": "2020-10-13T19:55:51Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "Is it parameters that would change in response to HRR, or parameters that would change which HRRs you accept? The latter captures the issue a bit more directly, since the issue is a goofy mechanical one of needing to process an HRR for two ClientHellos concurrently, and the error cases being a mess. (If the HRR matches inner but not outer, how do you construct a new outer ClientHello?)\r\n\r\nAlso a strict reading of \"parameters that might change in response to receiving HRR\" would include PSKs, which isn't what we want. RFC8446 has this odd corner case:\r\nhttps://tools.ietf.org/html/rfc8446#section-4.1.2\r\n\r\n>  -  Updating the \"pre_shared_key\" extension if present by recomputing\r\n>      the \"obfuscated_ticket_age\" and binder values and (optionally)\r\n>      removing any PSKs which are incompatible with the server's\r\n>      indicated cipher suite.\r\n\r\n(This was to save clients from recomputing binders for a hash they aren't using. Something something crypto agility is a headache.)\r\n\r\nA strict reading would also exclude cipher suite preferences, since the client doesn't change them on HRR, even though the server has already committed to one.",
+              "createdAt": "2020-10-13T19:47:37Z",
+              "updatedAt": "2020-10-13T19:55:51Z"
+            },
+            {
+              "originalPosition": 28,
+              "body": "Per comment above, perhaps \"Future extensions that influence the set of HelloRetryRequest values that the clients would accept\"? Though that is definitely kinda weird to say. :-/",
+              "createdAt": "2020-10-13T19:55:43Z",
+              "updatedAt": "2020-10-13T19:55:51Z"
             }
           ]
         }
@@ -28044,6 +28199,605 @@
           "body": "",
           "createdAt": "2020-10-09T17:17:37Z",
           "updatedAt": "2020-10-09T17:17:37Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 334,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTAxMTY3NTM3",
+      "title": "Resolve missing outer ClientHello guidance.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/334",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I noticed there's an OPEN ISSUE to add ClientHelloOuter guidance, but there's already a section for it. Link to it and flesh it out a little more.\r\n\r\nSadly, in doing so, I've traded one OPEN ISSUE for another OPEN ISSUE, but hopefully that'll be closed shortly.",
+      "createdAt": "2020-10-11T16:40:21Z",
+      "updatedAt": "2020-10-12T21:45:32Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "f38a6100acfc1f46f820db2eadfe614bd61afcb3",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "outer-ch-guidance",
+      "headRefOid": "3ce7475acccb160c1796d18a7dde1ae2a2153779",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTM2OTY0",
+          "commit": {
+            "abbreviatedOid": "3ce7475"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-12T21:45:32Z",
+          "updatedAt": "2020-10-12T21:45:32Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 335,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTAxMTc0MDA1",
+      "title": "Disambiguate the encoded vs actual ClientHelloInner.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/335",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #331. Along the way, I've made two additional tweaks:\r\n\r\n- Renamed outer_extension to outer_extensions, now that it contains multiple extensions. One of the diagrams even already referred to \"outer_extensions\" because I didn't realize it was called \"outer_extension\".\r\n\r\n- Clarified in compression process and ClientHelloInner construction rules that the to-be-compressed extensions must be consecutive. Hopefully that helps with #262.",
+      "createdAt": "2020-10-11T17:22:30Z",
+      "updatedAt": "2020-10-13T01:09:58Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "f38a6100acfc1f46f820db2eadfe614bd61afcb3",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "encoded-inner",
+      "headRefOid": "caa2fa30c90f5f0ae7087e2e9076416929672c2d",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> Clarified in compression process and ClientHelloInner construction rules that the to-be-compressed extensions must be consecutive. Hopefully that helps with #262.\r\n\r\n@cjpatton FYI. I'm hoping this will help clarify why the ordering thing isn't actually a big deal.",
+          "createdAt": "2020-10-11T17:31:33Z",
+          "updatedAt": "2020-10-11T17:31:33Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I've updated the PR to include text to disambiguate the serialization.\r\n\r\nIt's ambiguous whether the encoding includes the 4-byte (12-byte in DTLS) header from the Handshake structure or is just the body, from the ClientHello structure. I've picked the smaller one. This also saves having to answer, in DTLS, what happens when the inner sequence number is wrong.",
+          "createdAt": "2020-10-11T18:26:17Z",
+          "updatedAt": "2020-10-11T18:26:17Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2MTk5NzEw",
+          "commit": {
+            "abbreviatedOid": "d1cca1d"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-11T17:23:01Z",
+          "updatedAt": "2020-10-11T17:23:01Z",
+          "comments": [
+            {
+              "originalPosition": 156,
+              "body": "Should the TLS 1.3 column be \"\" instead of \"CH\"? It's not *really* a ClientHello extension.",
+              "createdAt": "2020-10-11T17:23:01Z",
+              "updatedAt": "2020-10-13T01:09:51Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTM5OTYy",
+          "commit": {
+            "abbreviatedOid": "bcf01d9"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-12T21:52:23Z",
+          "updatedAt": "2020-10-12T21:52:24Z",
+          "comments": [
+            {
+              "originalPosition": 156,
+              "body": "I think so.",
+              "createdAt": "2020-10-12T21:52:23Z",
+              "updatedAt": "2020-10-13T01:09:51Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTQzMzE5",
+          "commit": {
+            "abbreviatedOid": "bcf01d9"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-12T22:00:29Z",
+          "updatedAt": "2020-10-12T22:00:30Z",
+          "comments": [
+            {
+              "originalPosition": 77,
+              "body": "It should be possible to relax this for the existing \"inner_digest\" mechanism. However, I suspect this is will be essential once #336 lands.",
+              "createdAt": "2020-10-12T22:00:29Z",
+              "updatedAt": "2020-10-13T01:09:51Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTQ0NDA4",
+          "commit": {
+            "abbreviatedOid": "bcf01d9"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-12T22:03:20Z",
+          "updatedAt": "2020-10-12T22:03:20Z",
+          "comments": []
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTY4NzA1",
+          "commit": {
+            "abbreviatedOid": "bcf01d9"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-12T23:09:19Z",
+          "updatedAt": "2020-10-12T23:09:19Z",
+          "comments": [
+            {
+              "originalPosition": 77,
+              "body": "Hrm, I'm not sure I follow. I was thinking less a security requirement and more a correctness/syntax one. The outer_extensions mechanism, inner digest or AAD, can't express more than one consecutive chunk of elided extensions. That means that when you assemble the ClientHello, you need to adjust the order to fit your intended compression.",
+              "createdAt": "2020-10-12T23:09:19Z",
+              "updatedAt": "2020-10-13T01:09:51Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTcwOTc0",
+          "commit": {
+            "abbreviatedOid": "bcf01d9"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-12T23:16:33Z",
+          "updatedAt": "2020-10-12T23:16:34Z",
+          "comments": [
+            {
+              "originalPosition": 77,
+              "body": "My point is that the map from ClientHelloInner to EncodedClientHelloInner need not be invertible. To compute \"inner_digest\", the client just needs to be able to compute the same map from EncodedClientHelloInner to ClientHelloInner that the server does. I don't think it's not necessary that the extensions be consecutive, although it would be much easier to implement this correctly if they were.\r\n\r\nIn any case, I'm happy with this rule.",
+              "createdAt": "2020-10-12T23:16:33Z",
+              "updatedAt": "2020-10-13T01:09:51Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTg5OTM5",
+          "commit": {
+            "abbreviatedOid": "bcf01d9"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-13T00:12:39Z",
+          "updatedAt": "2020-10-13T00:12:39Z",
+          "comments": [
+            {
+              "originalPosition": 77,
+              "body": "I'm still a little confused. Just double-checking that the text is clear enough and we're on the same page... (If we're both happy with the text, but because we interpreted it differently, that's not very helpful!)\r\n\r\nI am saying it *is* important that ClientHelloInner to EncodedClientHelloInner is invertible. This is true in the status quo, and it remains true after #336. Handshake correctness requires that the server reconstruct the *exact* same value, byte-for-byte. Even though the extension order isn't very meaningful semantically, it changes what goes in the transcript and binders, so both sides need to agree. So if the client first assembles:\r\n\r\n`ClientHelloInner = (key_share, supported_versions, supported_groups, pre_shared_keys)`\r\n\r\nthen it compresses key_share + supported_groups as:\r\n\r\n`EncodedClientHelloInner = (outer_extensions(key_share, supported_groups), supported_versions, pre_shared_keys)`\r\n\r\nThe server will reconstruct:\r\n\r\n`ClientHelloInner' = (key_share, supported_groups, supported_versions, pre_shared_keys)`\r\n\r\nThese don't match, so the handshake will fail, both at the transcript and at checking the PSK binders. This isn't a security question because we haven't gotten there yet. It's a basic correctness question.\r\n\r\nNow, the thing that went wrong here is that the entire process of swapping extensions out for outer_extensions *only works if the removed extensions are consecutive*. Thus, this PR adds \"Removed extensions MUST be ordered consecutively in ClientHelloInner\" to EncodedClientHelloInner construction. For that precondition to hold, the client must have ordered the extensions it wanted to compress, thus we add a matching rule, this sentence, to ClientHelloInner construction. Now everything works out and the compression process is correct.",
+              "createdAt": "2020-10-13T00:12:39Z",
+              "updatedAt": "2020-10-13T01:09:51Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTkwNDgx",
+          "commit": {
+            "abbreviatedOid": "bcf01d9"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-13T00:14:37Z",
+          "updatedAt": "2020-10-13T00:14:38Z",
+          "comments": [
+            {
+              "originalPosition": 77,
+              "body": "Oh, I think I might see the misunderstanding.\r\n\r\n> [...] the client just needs to be able to compute the same map from EncodedClientHelloInner to ClientHelloInner that the server does.\r\n\r\nThis does not work. The client does not compute EncodedClientHelloInner to ClientHelloInner at all. It cannot. By the time we've gotten this far, we've already generated all the PSK binders.",
+              "createdAt": "2020-10-13T00:14:37Z",
+              "updatedAt": "2020-10-13T01:09:51Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA3MDAxMzc2",
+          "commit": {
+            "abbreviatedOid": "bcf01d9"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-13T00:55:26Z",
+          "updatedAt": "2020-10-13T00:55:27Z",
+          "comments": [
+            {
+              "originalPosition": 77,
+              "body": "Oof, I forgot about the PSK binders :D Thanks for taking the time to clarify my misunderstanding.",
+              "createdAt": "2020-10-13T00:55:26Z",
+              "updatedAt": "2020-10-13T01:09:51Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA3MDA1MjE0",
+          "commit": {
+            "abbreviatedOid": "caa2fa3"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-13T01:09:58Z",
+          "updatedAt": "2020-10-13T01:09:58Z",
+          "comments": [
+            {
+              "originalPosition": 156,
+              "body": "Switched to \"\"",
+              "createdAt": "2020-10-13T01:09:58Z",
+              "updatedAt": "2020-10-13T01:09:58Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 336,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTAxMTg0NjM1",
+      "title": "Replace inner_digest with ClientHelloOuterAAD",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/336",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "*Note: This PR's overall diff may be confusing because it needs a merge of #334 and #335 as a base. Look at the commits individually and only look at the commits not included in the other two PRs. I'll rebase this as the dependent PRs get merged.*\r\n\r\nCloses #323. The first commit shaves 33 bytes (or 49 with SHA-384) from the ciphertext by replacing inner_digest with ClientHelloOuterAAD. This also allows for more compact ClientHelloInner encodings when non-extension fields are expected to match. The second commit shaves a further 32 bytes.\r\n\r\nWe could probably further optimize the encoding but I've left it alone here. In particular, if we merge #316, all non-extension fields may as well be implicit. We could then replace the encryption payload with a plain extensions block.",
+      "createdAt": "2020-10-11T18:29:21Z",
+      "updatedAt": "2020-10-13T16:18:17Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "f38a6100acfc1f46f820db2eadfe614bd61afcb3",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "bind-outer-ch",
+      "headRefOid": "12842c18ce6a56c6822ee04a038efe361263e481",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> We could then replace the encryption payload with a plain extensions block.\r\n\r\nI guess that doesn't quite work, but we could replace it with the new random value, and an extensions block. Something like:\r\n\r\n```\r\nstruct {\r\n  Random random;\r\n  Extension extensions<8..2^16-1>;\r\n} EncodedClientHelloInner;\r\n```\r\n\r\nAnyway, a topic for a later PR, depending on how strongly we want to match cipher suites for #316. The size savings are a bit more marginal beyond that.",
+          "createdAt": "2020-10-12T20:55:36Z",
+          "updatedAt": "2020-10-12T20:55:36Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I like this change a lot. At some point while implementing ECH, I noted that it would be nice to have an explicit binding of CHOuter to the handshake in case of ECH acceptance. This provides that.",
+          "createdAt": "2020-10-12T22:24:13Z",
+          "updatedAt": "2020-10-12T22:24:13Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTQ2MTAx",
+          "commit": {
+            "abbreviatedOid": "2bc7c8f"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-12T22:07:44Z",
+          "updatedAt": "2020-10-12T22:07:44Z",
+          "comments": [
+            {
+              "originalPosition": 64,
+              "body": "s/to the encryption/for AEAD encryption.",
+              "createdAt": "2020-10-12T22:07:44Z",
+              "updatedAt": "2020-10-12T22:07:44Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTQ4MTc2",
+          "commit": {
+            "abbreviatedOid": "2bc7c8f"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-12T22:12:48Z",
+          "updatedAt": "2020-10-12T22:12:49Z",
+          "comments": [
+            {
+              "originalPosition": 64,
+              "body": "`ClientHelloOuterAAD` is a bit different than we discussed in #323. In particular, I thought it was decided that we should predict the length of the \"encrypted_client_hello\" extension and authenticate as many zeros. What changed your mind? For the record, the approach is here seems a lot simpler to me :)",
+              "createdAt": "2020-10-12T22:12:48Z",
+              "updatedAt": "2020-10-12T22:12:49Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTQ4NTgx",
+          "commit": {
+            "abbreviatedOid": "2bc7c8f"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-12T22:13:53Z",
+          "updatedAt": "2020-10-12T22:13:53Z",
+          "comments": [
+            {
+              "originalPosition": 57,
+              "body": "Suggestion: s/Outer ClientHello/ClientHelloOuter.",
+              "createdAt": "2020-10-12T22:13:53Z",
+              "updatedAt": "2020-10-12T22:13:53Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTQ5MTAz",
+          "commit": {
+            "abbreviatedOid": "12842c1"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-12T22:15:09Z",
+          "updatedAt": "2020-10-12T22:15:10Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "Suggestion: s/Inner ClientHello/ClientHelloInner.",
+              "createdAt": "2020-10-12T22:15:09Z",
+              "updatedAt": "2020-10-12T22:15:10Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTQ5NjMx",
+          "commit": {
+            "abbreviatedOid": "12842c1"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-12T22:16:33Z",
+          "updatedAt": "2020-10-12T22:16:34Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "Does this mean to send a 0-length `legacy_session_id`, or does this mean to send a `legacy_session_id` with the same length, but with all zeros? Presumably you mean the former?",
+              "createdAt": "2020-10-12T22:16:33Z",
+              "updatedAt": "2020-10-12T22:16:34Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA2OTY5NTIz",
+          "commit": {
+            "abbreviatedOid": "12842c1"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-12T23:11:46Z",
+          "updatedAt": "2020-10-12T23:11:47Z",
+          "comments": [
+            {
+              "originalPosition": 64,
+              "body": "Oh I probably was just unclear in that discussion. I never preferred the zeros formulation. :-) That was more me musing on how annoying it would be if there were another reason to prefer it. I like this better because, as you say, it's simpler.",
+              "createdAt": "2020-10-12T23:11:47Z",
+              "updatedAt": "2020-10-12T23:11:47Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA3NjEwOTM0",
+          "commit": {
+            "abbreviatedOid": "12842c1"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-13T16:17:12Z",
+          "updatedAt": "2020-10-13T16:17:13Z",
+          "comments": [
+            {
+              "originalPosition": 57,
+              "body": "(Will deal with uploading a new revision after base PRs go through, since Github makes a mess of these.)\r\n\r\nWorks for me, though it's unclear to me how much we like sticking identifiers in section titles, which is why I used the words instead. E.g. RFC8446's section titles say things like \"Supported Versions\" and this document had \"Incorporating Outer Extensions\" rather than \"outer_extensions\". Although, admittedly, \"ClientHello\" is itself an identifier, but I figured it was a more established one (elsewhere we have \"Sending an encrypted ClientHello\").\r\n\r\n\u00af\\\\\\_(\u30c4)_/\u00af",
+              "createdAt": "2020-10-13T16:17:13Z",
+              "updatedAt": "2020-10-13T16:18:12Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA3NjExOTAw",
+          "commit": {
+            "abbreviatedOid": "12842c1"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-13T16:18:17Z",
+          "updatedAt": "2020-10-13T16:18:17Z",
+          "comments": [
+            {
+              "originalPosition": 57,
+              "body": "Oh, and we have \"Outer ClientHello\" as a section title down in Security Considerations, though I suppose that too is my fault. :-)",
+              "createdAt": "2020-10-13T16:18:17Z",
+              "updatedAt": "2020-10-13T16:18:17Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 337,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTAyNTQ3ODMw",
+      "title": "Tweak section titles and comparison against criteria.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/337",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "We use a mix of sentence case and title case in the document. The RFC style guide says to use title case. This PR aligns with that.\r\nhttps://tools.ietf.org/html/rfc7322#section-3.4\r\n\r\nAdditionally, the ESNI criteria document has changed slightly since the comparison against criteria section was written. I've aligned the titles with the final wording in RFC8744. RFC8744 has also merged \"Proper security context\" and \"Split server spoofing\", so I've done the same here. \"Support Multiple Protocols\" also now talks about transport protocols and ALPN, so I've added a few words about that.",
+      "createdAt": "2020-10-13T16:34:02Z",
+      "updatedAt": "2020-10-13T21:33:20Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "f38a6100acfc1f46f820db2eadfe614bd61afcb3",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "section-titles",
+      "headRefOid": "4cfe40c32d929defe2c6c9c7477c259a242ba841",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA3ODQyMjcz",
+          "commit": {
+            "abbreviatedOid": "4cfe40c"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-13T21:28:41Z",
+          "updatedAt": "2020-10-13T21:28:42Z",
+          "comments": [
+            {
+              "originalPosition": 91,
+              "body": "s/party/Party/ ?",
+              "createdAt": "2020-10-13T21:28:42Z",
+              "updatedAt": "2020-10-13T21:28:42Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA3ODQ0OTUx",
+          "commit": {
+            "abbreviatedOid": "4cfe40c"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-13T21:33:20Z",
+          "updatedAt": "2020-10-13T21:33:20Z",
+          "comments": [
+            {
+              "originalPosition": 91,
+              "body": "Yeah, I thought that too, but RFC8744 does it this way.\r\nhttps://www.rfc-editor.org/rfc/rfc8744.html#name-enable-multi-party-security\r\n\r\n\u00af\\\\\\_(\u30c4)_/\u00af",
+              "createdAt": "2020-10-13T21:33:20Z",
+              "updatedAt": "2020-10-13T21:33:20Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 338,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTAyODMxNjY1",
+      "title": "Add an OPEN ISSUE for stateless HRR and split mode.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/338",
+      "state": "MERGED",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Issue #333.",
+      "createdAt": "2020-10-13T20:56:12Z",
+      "updatedAt": "2020-10-14T20:03:31Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "f38a6100acfc1f46f820db2eadfe614bd61afcb3",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "stateless-hrr-open-issue",
+      "headRefOid": "4c4db5a95ad794ac23dc7dc99e31d0f4b16b258f",
+      "closedAt": "2020-10-14T20:03:31Z",
+      "mergedAt": "2020-10-14T20:03:31Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "b58478b19d3ba85f6a386fdd7b8fea11e08ee4c2"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA3ODM2NDc0",
+          "commit": {
+            "abbreviatedOid": "4c4db5a"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-13T21:18:58Z",
+          "updatedAt": "2020-10-13T21:18:58Z",
+          "comments": []
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4Njg2NDAz",
+          "commit": {
+            "abbreviatedOid": "4c4db5a"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-14T20:03:24Z",
+          "updatedAt": "2020-10-14T20:03:24Z",
           "comments": []
         }
       ]
