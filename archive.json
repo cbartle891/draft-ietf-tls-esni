@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2020-10-14T20:04:06.517977+00:00",
+  "timestamp": "2020-10-15T18:49:09.532833+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -5329,7 +5329,7 @@
       "id": "MDU6SXNzdWU2NzgwMTcwMTI=",
       "title": "\"outer_extensions\" mechanism is lossy compression",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/262",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "cjpatton",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
@@ -5339,8 +5339,8 @@
       ],
       "body": "Say we want the outer CH to have extensions a and b. Let's write this as\r\n```\r\n  ClientHelloOuter = [a, b]\r\n```\r\nSay the inner CH should have extensions a, b, c, and d. But b is really big, so we want a shallow copy it. Then we write the compressed inner CH as\r\n```\r\n   ClientHelloInner = [a, c, d, outer_extensions = [ shallow_copy_of_b ]]\r\n```\r\nThe decompressed ClientHelloInner should be `[a, b, c, d]`, but using `outer_extensions` destroys the intended order.\r\n\r\n",
       "createdAt": "2020-08-12T22:28:26Z",
-      "updatedAt": "2020-09-03T18:25:32Z",
-      "closedAt": null,
+      "updatedAt": "2020-10-14T23:30:50Z",
+      "closedAt": "2020-10-14T23:30:50Z",
       "comments": [
         {
           "author": "davidben",
@@ -5439,6 +5439,13 @@
           "body": "My inclination is also that the contiguous constraint is probably fine, though we have played games with extension ordering before with the PSK extension. Although I would actually anticipate compressing most extensions, and just ordering things to match. Most of them aren't sensitive and, assuming you're already compressing one extension, even an empty extension would cost just four bytes uncompressed and two bytes compressed.",
           "createdAt": "2020-09-03T18:25:31Z",
           "updatedAt": "2020-09-03T18:25:31Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I'm pretty happy with the state of things. I'm closing this issue.",
+          "createdAt": "2020-10-14T23:30:49Z",
+          "updatedAt": "2020-10-14T23:30:49Z"
         }
       ]
     },
@@ -7784,15 +7791,15 @@
       "id": "MDU6SXNzdWU3MTc4MTI3NjU=",
       "title": "Encoded vs actual ClientHelloInner is a little ambiguous",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/331",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "davidben",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "There are two ClientHelloInners, the actual one used in the handshake, and the encoded one with outer_extensions substituted in. Both are described as ClientHelloInner, but this makes it slightly ambiguous which goes into, say, the handshake transcript.\r\n\r\n(It's late now, so I'll leave this as an issue without a PR. If we don't end up resolving this separately, I'll probably fix this as part of #323. If we decide to implicitly copy over legacy_session_id, the encryption payload becomes less and less defensibly an actual ClientHelloInner.)",
       "createdAt": "2020-10-09T03:02:34Z",
-      "updatedAt": "2020-10-11T11:24:13Z",
-      "closedAt": null,
+      "updatedAt": "2020-10-14T20:07:50Z",
+      "closedAt": "2020-10-14T20:07:50Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -24886,21 +24893,21 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NDc3NTA3OTAz",
       "title": "Revise \"outer_extension\" (postponed until after -08)",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/293",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "cjpatton",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "The \"outer_extension\" mechanism doesn't preserve the order of extensions in the ClientHelloInner. This change replaces it with a mechanism that does.\r\n\r\nThis addresses #262 and might impact #263.",
       "createdAt": "2020-09-02T01:30:33Z",
-      "updatedAt": "2020-10-09T15:29:19Z",
+      "updatedAt": "2020-10-14T23:29:29Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "3426cfbf3f25bd2aa23a13e8700702717c05a42f",
       "headRepository": "cjpatton/draft-ietf-tls-esni",
       "headRefName": "outer_extensions_compression",
       "headRefOid": "67c93eea32548a8bd170fd82e98539a0b70acbc8",
-      "closedAt": null,
+      "closedAt": "2020-10-14T23:29:29Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -24953,6 +24960,13 @@
           "body": "#323 doesn't save you from matching the order. It is a requirement in the handshake itself that the client and server act on a byte-for-byte identical ClientHelloInner. It goes in the handshake transcript.",
           "createdAt": "2020-10-09T15:27:26Z",
           "updatedAt": "2020-10-09T15:29:19Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Closing this for now. We could revisit it, but my guess is that we're well on our way to squeezing sufficiently many bytes out of the ClientHelloInner.",
+          "createdAt": "2020-10-14T23:29:29Z",
+          "updatedAt": "2020-10-14T23:29:29Z"
         }
       ],
       "reviews": [
@@ -28208,24 +28222,26 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NTAxMTY3NTM3",
       "title": "Resolve missing outer ClientHello guidance.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/334",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "davidben",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "I noticed there's an OPEN ISSUE to add ClientHelloOuter guidance, but there's already a section for it. Link to it and flesh it out a little more.\r\n\r\nSadly, in doing so, I've traded one OPEN ISSUE for another OPEN ISSUE, but hopefully that'll be closed shortly.",
       "createdAt": "2020-10-11T16:40:21Z",
-      "updatedAt": "2020-10-12T21:45:32Z",
+      "updatedAt": "2020-10-14T20:09:54Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "f38a6100acfc1f46f820db2eadfe614bd61afcb3",
       "headRepository": "davidben/draft-ietf-tls-esni",
       "headRefName": "outer-ch-guidance",
       "headRefOid": "3ce7475acccb160c1796d18a7dde1ae2a2153779",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2020-10-14T20:09:54Z",
+      "mergedAt": "2020-10-14T20:09:54Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "f9eb1a5b40b3c5770b2350b499623e659286f251"
+      },
       "comments": [],
       "reviews": [
         {
@@ -28240,6 +28256,19 @@
           "createdAt": "2020-10-12T21:45:32Z",
           "updatedAt": "2020-10-12T21:45:32Z",
           "comments": []
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4NjkwNzkz",
+          "commit": {
+            "abbreviatedOid": "3ce7475"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-14T20:09:45Z",
+          "updatedAt": "2020-10-14T20:09:45Z",
+          "comments": []
         }
       ]
     },
@@ -28248,24 +28277,26 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NTAxMTc0MDA1",
       "title": "Disambiguate the encoded vs actual ClientHelloInner.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/335",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "davidben",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Closes #331. Along the way, I've made two additional tweaks:\r\n\r\n- Renamed outer_extension to outer_extensions, now that it contains multiple extensions. One of the diagrams even already referred to \"outer_extensions\" because I didn't realize it was called \"outer_extension\".\r\n\r\n- Clarified in compression process and ClientHelloInner construction rules that the to-be-compressed extensions must be consecutive. Hopefully that helps with #262.",
       "createdAt": "2020-10-11T17:22:30Z",
-      "updatedAt": "2020-10-13T01:09:58Z",
+      "updatedAt": "2020-10-14T20:07:50Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "f38a6100acfc1f46f820db2eadfe614bd61afcb3",
       "headRepository": "davidben/draft-ietf-tls-esni",
       "headRefName": "encoded-inner",
       "headRefOid": "caa2fa30c90f5f0ae7087e2e9076416929672c2d",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2020-10-14T20:07:50Z",
+      "mergedAt": "2020-10-14T20:07:50Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "44aaa7e051ff27cf20b2adf8dcfd86ce7b3bd73e"
+      },
       "comments": [
         {
           "author": "davidben",
@@ -28475,6 +28506,19 @@
               "updatedAt": "2020-10-13T01:09:58Z"
             }
           ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4Njg5MDYy",
+          "commit": {
+            "abbreviatedOid": "caa2fa3"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-14T20:07:18Z",
+          "updatedAt": "2020-10-14T20:07:18Z",
+          "comments": []
         }
       ]
     },
@@ -28488,15 +28532,15 @@
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
-      "body": "*Note: This PR's overall diff may be confusing because it needs a merge of #334 and #335 as a base. Look at the commits individually and only look at the commits not included in the other two PRs. I'll rebase this as the dependent PRs get merged.*\r\n\r\nCloses #323. The first commit shaves 33 bytes (or 49 with SHA-384) from the ciphertext by replacing inner_digest with ClientHelloOuterAAD. This also allows for more compact ClientHelloInner encodings when non-extension fields are expected to match. The second commit shaves a further 32 bytes.\r\n\r\nWe could probably further optimize the encoding but I've left it alone here. In particular, if we merge #316, all non-extension fields may as well be implicit. We could then replace the encryption payload with a plain extensions block.",
+      "body": "Closes #323. The first commit shaves 33 bytes (or 49 with SHA-384) from the ciphertext by replacing inner_digest with ClientHelloOuterAAD. This also allows for more compact ClientHelloInner encodings when non-extension fields are expected to match. The second commit shaves a further 32 bytes.\r\n\r\nWe could probably further optimize the encoding but I've left it alone here. In particular, if we merge #316, all non-extension fields may as well be implicit. We could then replace the encryption payload with a plain extensions block.",
       "createdAt": "2020-10-11T18:29:21Z",
-      "updatedAt": "2020-10-13T16:18:17Z",
+      "updatedAt": "2020-10-14T22:19:37Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
-      "baseRefOid": "f38a6100acfc1f46f820db2eadfe614bd61afcb3",
+      "baseRefOid": "f9eb1a5b40b3c5770b2350b499623e659286f251",
       "headRepository": "davidben/draft-ietf-tls-esni",
       "headRefName": "bind-outer-ch",
-      "headRefOid": "12842c18ce6a56c6822ee04a038efe361263e481",
+      "headRefOid": "cd11d51b5457c8217d5248754aa0d459fa13ee76",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -28515,6 +28559,13 @@
           "body": "I like this change a lot. At some point while implementing ECH, I noted that it would be nice to have an explicit binding of CHOuter to the handshake in case of ECH acceptance. This provides that.",
           "createdAt": "2020-10-12T22:24:13Z",
           "updatedAt": "2020-10-12T22:24:13Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Rebased and review comments addressed. The PR should also no longer be in a confusing state if you look at the diff.",
+          "createdAt": "2020-10-14T20:36:32Z",
+          "updatedAt": "2020-10-14T20:36:32Z"
         }
       ],
       "reviews": [
@@ -28534,7 +28585,7 @@
               "originalPosition": 64,
               "body": "s/to the encryption/for AEAD encryption.",
               "createdAt": "2020-10-12T22:07:44Z",
-              "updatedAt": "2020-10-12T22:07:44Z"
+              "updatedAt": "2020-10-14T20:33:59Z"
             }
           ]
         },
@@ -28554,7 +28605,7 @@
               "originalPosition": 64,
               "body": "`ClientHelloOuterAAD` is a bit different than we discussed in #323. In particular, I thought it was decided that we should predict the length of the \"encrypted_client_hello\" extension and authenticate as many zeros. What changed your mind? For the record, the approach is here seems a lot simpler to me :)",
               "createdAt": "2020-10-12T22:12:48Z",
-              "updatedAt": "2020-10-12T22:12:49Z"
+              "updatedAt": "2020-10-14T20:33:59Z"
             }
           ]
         },
@@ -28574,7 +28625,7 @@
               "originalPosition": 57,
               "body": "Suggestion: s/Outer ClientHello/ClientHelloOuter.",
               "createdAt": "2020-10-12T22:13:53Z",
-              "updatedAt": "2020-10-12T22:13:53Z"
+              "updatedAt": "2020-10-14T20:33:59Z"
             }
           ]
         },
@@ -28594,7 +28645,7 @@
               "originalPosition": 5,
               "body": "Suggestion: s/Inner ClientHello/ClientHelloInner.",
               "createdAt": "2020-10-12T22:15:09Z",
-              "updatedAt": "2020-10-12T22:15:10Z"
+              "updatedAt": "2020-10-14T20:33:59Z"
             }
           ]
         },
@@ -28614,7 +28665,7 @@
               "originalPosition": 21,
               "body": "Does this mean to send a 0-length `legacy_session_id`, or does this mean to send a `legacy_session_id` with the same length, but with all zeros? Presumably you mean the former?",
               "createdAt": "2020-10-12T22:16:33Z",
-              "updatedAt": "2020-10-12T22:16:34Z"
+              "updatedAt": "2020-10-14T20:33:59Z"
             }
           ]
         },
@@ -28634,7 +28685,7 @@
               "originalPosition": 64,
               "body": "Oh I probably was just unclear in that discussion. I never preferred the zeros formulation. :-) That was more me musing on how annoying it would be if there were another reason to prefer it. I like this better because, as you say, it's simpler.",
               "createdAt": "2020-10-12T23:11:47Z",
-              "updatedAt": "2020-10-12T23:11:47Z"
+              "updatedAt": "2020-10-14T20:33:59Z"
             }
           ]
         },
@@ -28654,7 +28705,7 @@
               "originalPosition": 57,
               "body": "(Will deal with uploading a new revision after base PRs go through, since Github makes a mess of these.)\r\n\r\nWorks for me, though it's unclear to me how much we like sticking identifiers in section titles, which is why I used the words instead. E.g. RFC8446's section titles say things like \"Supported Versions\" and this document had \"Incorporating Outer Extensions\" rather than \"outer_extensions\". Although, admittedly, \"ClientHello\" is itself an identifier, but I figured it was a more established one (elsewhere we have \"Sending an encrypted ClientHello\").\r\n\r\n\u00af\\\\\\_(\u30c4)_/\u00af",
               "createdAt": "2020-10-13T16:17:13Z",
-              "updatedAt": "2020-10-13T16:18:12Z"
+              "updatedAt": "2020-10-14T20:33:59Z"
             }
           ]
         },
@@ -28674,9 +28725,182 @@
               "originalPosition": 57,
               "body": "Oh, and we have \"Outer ClientHello\" as a section title down in Security Considerations, though I suppose that too is my fault. :-)",
               "createdAt": "2020-10-13T16:18:17Z",
-              "updatedAt": "2020-10-13T16:18:17Z"
+              "updatedAt": "2020-10-14T20:33:59Z"
             }
           ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4NjkxOTc4",
+          "commit": {
+            "abbreviatedOid": "12842c1"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-14T20:11:28Z",
+          "updatedAt": "2020-10-14T20:11:29Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "```suggestion\r\n## Encoding ClientHelloInner {#encoding-inner-clienthello}\r\n```",
+              "createdAt": "2020-10-14T20:11:29Z",
+              "updatedAt": "2020-10-14T20:33:59Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4NjkyNTM4",
+          "commit": {
+            "abbreviatedOid": "12842c1"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-14T20:12:15Z",
+          "updatedAt": "2020-10-14T20:12:15Z",
+          "comments": [
+            {
+              "originalPosition": 68,
+              "body": "```suggestion\r\n## Authenticating ClientHelloOuter {#authenticating-outer-clienthello}\r\n```",
+              "createdAt": "2020-10-14T20:12:15Z",
+              "updatedAt": "2020-10-14T20:33:59Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4NzA3NjMy",
+          "commit": {
+            "abbreviatedOid": "cd11d51"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-14T20:34:38Z",
+          "updatedAt": "2020-10-14T20:34:39Z",
+          "comments": [
+            {
+              "originalPosition": 64,
+              "body": "Done. Though I used HPKE encryption since it looks like the rest of the document mostly refers to HPKE rather than the internal AEAD.",
+              "createdAt": "2020-10-14T20:34:39Z",
+              "updatedAt": "2020-10-14T20:34:39Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4NzA3ODQ2",
+          "commit": {
+            "abbreviatedOid": "cd11d51"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-14T20:34:57Z",
+          "updatedAt": "2020-10-14T20:34:57Z",
+          "comments": [
+            {
+              "originalPosition": 57,
+              "body": "Done.",
+              "createdAt": "2020-10-14T20:34:57Z",
+              "updatedAt": "2020-10-14T20:34:57Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4NzA3OTE5",
+          "commit": {
+            "abbreviatedOid": "cd11d51"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-14T20:35:03Z",
+          "updatedAt": "2020-10-14T20:35:03Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "Done.",
+              "createdAt": "2020-10-14T20:35:03Z",
+              "updatedAt": "2020-10-14T20:35:03Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4NzA4MDg3",
+          "commit": {
+            "abbreviatedOid": "cd11d51"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-14T20:35:18Z",
+          "updatedAt": "2020-10-14T20:35:19Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "Reworded to be clearer.",
+              "createdAt": "2020-10-14T20:35:19Z",
+              "updatedAt": "2020-10-14T20:35:19Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4NzA4NDcw",
+          "commit": {
+            "abbreviatedOid": "cd11d51"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-14T20:35:51Z",
+          "updatedAt": "2020-10-14T20:35:52Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "Applied manually since I needed to rebase.",
+              "createdAt": "2020-10-14T20:35:51Z",
+              "updatedAt": "2020-10-14T20:35:52Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4NzA4NTU3",
+          "commit": {
+            "abbreviatedOid": "cd11d51"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-14T20:35:58Z",
+          "updatedAt": "2020-10-14T20:35:59Z",
+          "comments": [
+            {
+              "originalPosition": 68,
+              "body": "Applied manually since I needed to rebase.",
+              "createdAt": "2020-10-14T20:35:58Z",
+              "updatedAt": "2020-10-14T20:35:59Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4ODA5OTE3",
+          "commit": {
+            "abbreviatedOid": "cd11d51"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-14T22:19:37Z",
+          "updatedAt": "2020-10-14T22:19:37Z",
+          "comments": []
         }
       ]
     },
@@ -28685,24 +28909,26 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NTAyNTQ3ODMw",
       "title": "Tweak section titles and comparison against criteria.",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/337",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "davidben",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "We use a mix of sentence case and title case in the document. The RFC style guide says to use title case. This PR aligns with that.\r\nhttps://tools.ietf.org/html/rfc7322#section-3.4\r\n\r\nAdditionally, the ESNI criteria document has changed slightly since the comparison against criteria section was written. I've aligned the titles with the final wording in RFC8744. RFC8744 has also merged \"Proper security context\" and \"Split server spoofing\", so I've done the same here. \"Support Multiple Protocols\" also now talks about transport protocols and ALPN, so I've added a few words about that.",
       "createdAt": "2020-10-13T16:34:02Z",
-      "updatedAt": "2020-10-13T21:33:20Z",
+      "updatedAt": "2020-10-14T20:04:56Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
-      "baseRefOid": "f38a6100acfc1f46f820db2eadfe614bd61afcb3",
+      "baseRefOid": "b58478b19d3ba85f6a386fdd7b8fea11e08ee4c2",
       "headRepository": "davidben/draft-ietf-tls-esni",
       "headRefName": "section-titles",
-      "headRefOid": "4cfe40c32d929defe2c6c9c7477c259a242ba841",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "332b51f45bce91a8d5ca8078badeb543664354ee",
+      "closedAt": "2020-10-14T20:04:56Z",
+      "mergedAt": "2020-10-14T20:04:56Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "63e32c26407276842bb160633775993f8951f3d5"
+      },
       "comments": [],
       "reviews": [
         {
@@ -28721,7 +28947,7 @@
               "originalPosition": 91,
               "body": "s/party/Party/ ?",
               "createdAt": "2020-10-13T21:28:42Z",
-              "updatedAt": "2020-10-13T21:28:42Z"
+              "updatedAt": "2020-10-14T20:04:50Z"
             }
           ]
         },
@@ -28741,9 +28967,22 @@
               "originalPosition": 91,
               "body": "Yeah, I thought that too, but RFC8744 does it this way.\r\nhttps://www.rfc-editor.org/rfc/rfc8744.html#name-enable-multi-party-security\r\n\r\n\u00af\\\\\\_(\u30c4)_/\u00af",
               "createdAt": "2020-10-13T21:33:20Z",
-              "updatedAt": "2020-10-13T21:33:20Z"
+              "updatedAt": "2020-10-14T20:04:50Z"
             }
           ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA4Njg2OTg2",
+          "commit": {
+            "abbreviatedOid": "4cfe40c"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-14T20:04:13Z",
+          "updatedAt": "2020-10-14T20:04:13Z",
+          "comments": []
         }
       ]
     },
@@ -28798,6 +29037,107 @@
           "body": "",
           "createdAt": "2020-10-14T20:03:24Z",
           "updatedAt": "2020-10-14T20:03:24Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 339,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTAzNzA4MTI5",
+      "title": "Clarify client-facing server HRR behavior",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/339",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #325.",
+      "createdAt": "2020-10-14T23:22:28Z",
+      "updatedAt": "2020-10-15T17:31:47Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "f9eb1a5b40b3c5770b2350b499623e659286f251",
+      "headRepository": "cjpatton/draft-ietf-tls-esni",
+      "headRefName": "more-hrr-behavior",
+      "headRefOid": "588695684b3c7155cac480260ef77028c5663387",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA5NjA0NzY1",
+          "commit": {
+            "abbreviatedOid": "5886956"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-15T17:21:11Z",
+          "updatedAt": "2020-10-15T17:31:47Z",
+          "comments": [
+            {
+              "originalPosition": 23,
+              "body": "I found this a little hard to interpret. It suggests equality of the ClientHellos themselves, which isn't what we want. It's also a little odd since CH1' and CH2' are functions of both what the client sent and what the server chose to do what in response. But it would be less enforcing an invariant on the latter and more maintaining it. WDYT about:\r\n\r\n> In case a HelloRetryRequest (HRR) is sent, the client-facing server MUST consistently accept or decline ECH between the two ClientHellos, using the same ECHConfig, and fail the handshake if this is not possible. This is achieved as follows.",
+              "createdAt": "2020-10-15T17:21:11Z",
+              "updatedAt": "2020-10-15T17:31:47Z"
+            },
+            {
+              "originalPosition": 36,
+              "body": "Nit: I don't think we need to add well-formed ClientECH structure to the precondition. The client-facing server is should already fail the connection with a decode_error if the extension doesn't parse.",
+              "createdAt": "2020-10-15T17:22:24Z",
+              "updatedAt": "2020-10-15T17:31:47Z"
+            },
+            {
+              "originalPosition": 38,
+              "body": "Does the server need to check the config identifier if it declines ECH, or just if it accepts ECH? What happens if the client and server use the trial decryption mode, where the config ID is empty and you only determine the config by using it? Perhaps this should be phrased in terms of the ECHConfig used. WDYT about:\r\n\r\n> If the client-facing server accepts ECH in response to CH1, it MUST check that the ClientECH.config_id parameter is the same between CH1 and CH2. If they differ, the server MUST abort the connection with an \"illegal_parameter\" alert. It then MUST decrypt the extension using the previously-selected ECHConfig and, if decryption fails, abort the connection with a \"decrypt_error\" alert. Note that, if the connection used the trial decryption mode with an empty ClientECH.config_id value, the server does not continue to try other configurations on decryption error.\r\n\r\nThough this means, if the server believes in trial decryption, you need to remember *both* the ECHConfig *and* whether to expect an empty or matching config_id value.\r\n\r\n(As an aside, this admits another GREASE-distinguishing active attack, and one I don't see any way of avoiding. But it only applies to connections that would naturally trip HRR.)",
+              "createdAt": "2020-10-15T17:31:28Z",
+              "updatedAt": "2020-10-15T17:31:47Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 340,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTA0MjkwMjQ5",
+      "title": "Remove remnant of ECH PSKs and non-ECH PSKs.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/340",
+      "state": "MERGED",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This clause is a remnant of when we tried to partition the resumption space across ECH negotiation, which was simplified in #317.",
+      "createdAt": "2020-10-15T18:16:38Z",
+      "updatedAt": "2020-10-15T18:48:39Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "f9eb1a5b40b3c5770b2350b499623e659286f251",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "psk-remnant",
+      "headRefOid": "44a79be65b12a8ed2555dc93b7d6650b4ad11c08",
+      "closedAt": "2020-10-15T18:48:39Z",
+      "mergedAt": "2020-10-15T18:48:39Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "01674f4ac07fd532fd90634701d36db042235875"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA5NjczMDE2",
+          "commit": {
+            "abbreviatedOid": "44a79be"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-15T18:48:34Z",
+          "updatedAt": "2020-10-15T18:48:34Z",
           "comments": []
         }
       ]
