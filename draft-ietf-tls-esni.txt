@@ -1048,14 +1048,14 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    ClientHelloInner from EncodedClientHelloInner, as described in
    Section 5.1.
 
-   Upon determining the true SNI, the client-facing server then either
-   serves the connection directly (if in Shared Mode), in which case it
-   executes the steps in the following section, or forwards the TLS
-   connection to the backend server (if in Split Mode).  In the latter
-   case, it does not make any changes to the TLS messages, but just
-   blindly forwards them.
-
-
+   Upon determining the ClientHelloInner, the client-facing server then
+   forwards the ClientHelloInner to the appropriate backend server,
+   which proceeds as in Section 7.2.  If the backend server responds
+   with a HelloRetryRequest, the client-facing server forwards it,
+   decrypts the client's second ClientHelloOuter using the modified
+   procedure in Section 7.1.1, and forwards the resulting second
+   ClientHelloInner.  The client-facing server forwards all other TLS
+   messages between the client and backend server unmodified.
 
 
 
