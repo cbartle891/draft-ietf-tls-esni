@@ -540,7 +540,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    extension.
 
        enum {
-          outer_extensions(0xfe00), (65535)
+          outer_extensions(0xfd00), (65535)
        } ExtensionType;
 
        struct {
@@ -1798,7 +1798,7 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
        being set to "CH, EE", and "Recommended" column being set to
        "Yes".
 
-   2.  outer_extensions(0xfe00), with the "TLS 1.3" column values being
+   2.  outer_extensions(0xfd00), with the "TLS 1.3" column values being
        set to "", and "Recommended" column being set to "Yes".
 
 11.2.  Update of the TLS Alert Registry
