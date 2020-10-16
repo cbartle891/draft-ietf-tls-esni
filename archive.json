@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2020-10-15T18:49:09.532833+00:00",
+  "timestamp": "2020-10-16T15:29:38.881103+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -7622,15 +7622,15 @@
       "id": "MDU6SXNzdWU3MTUyNjAxMjY=",
       "title": "Specify cross-HRR key rotation issue(s)",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/325",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "chris-wood",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "If a server implements ECH decryption via an RPC call, it's possible for the client's ECH keys to be valid for CH1 but invalid for CH2, perhaps due to a race condition that updates the server's keys across these messages. This should be exceedingly rare in practice, so failing the connection with an alert is probably fine, but we should probably be clear about this.\r\n\r\ncc @cjpatton ",
       "createdAt": "2020-10-06T00:59:13Z",
-      "updatedAt": "2020-10-13T20:53:19Z",
-      "closedAt": null,
+      "updatedAt": "2020-10-16T15:29:11Z",
+      "closedAt": "2020-10-16T15:29:11Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -28534,13 +28534,13 @@
       "labels": [],
       "body": "Closes #323. The first commit shaves 33 bytes (or 49 with SHA-384) from the ciphertext by replacing inner_digest with ClientHelloOuterAAD. This also allows for more compact ClientHelloInner encodings when non-extension fields are expected to match. The second commit shaves a further 32 bytes.\r\n\r\nWe could probably further optimize the encoding but I've left it alone here. In particular, if we merge #316, all non-extension fields may as well be implicit. We could then replace the encryption payload with a plain extensions block.",
       "createdAt": "2020-10-11T18:29:21Z",
-      "updatedAt": "2020-10-14T22:19:37Z",
+      "updatedAt": "2020-10-16T15:25:49Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
-      "baseRefOid": "f9eb1a5b40b3c5770b2350b499623e659286f251",
+      "baseRefOid": "17ac85d3a0a9c4a0bbb93060df0e360ede4dac3c",
       "headRepository": "davidben/draft-ietf-tls-esni",
       "headRefName": "bind-outer-ch",
-      "headRefOid": "cd11d51b5457c8217d5248754aa0d459fa13ee76",
+      "headRefOid": "bd3f76b8f39fc34f89d9ef56fac098005ee2d9d1",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -28585,7 +28585,7 @@
               "originalPosition": 64,
               "body": "s/to the encryption/for AEAD encryption.",
               "createdAt": "2020-10-12T22:07:44Z",
-              "updatedAt": "2020-10-14T20:33:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28605,7 +28605,7 @@
               "originalPosition": 64,
               "body": "`ClientHelloOuterAAD` is a bit different than we discussed in #323. In particular, I thought it was decided that we should predict the length of the \"encrypted_client_hello\" extension and authenticate as many zeros. What changed your mind? For the record, the approach is here seems a lot simpler to me :)",
               "createdAt": "2020-10-12T22:12:48Z",
-              "updatedAt": "2020-10-14T20:33:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28625,7 +28625,7 @@
               "originalPosition": 57,
               "body": "Suggestion: s/Outer ClientHello/ClientHelloOuter.",
               "createdAt": "2020-10-12T22:13:53Z",
-              "updatedAt": "2020-10-14T20:33:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28645,7 +28645,7 @@
               "originalPosition": 5,
               "body": "Suggestion: s/Inner ClientHello/ClientHelloInner.",
               "createdAt": "2020-10-12T22:15:09Z",
-              "updatedAt": "2020-10-14T20:33:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28665,7 +28665,7 @@
               "originalPosition": 21,
               "body": "Does this mean to send a 0-length `legacy_session_id`, or does this mean to send a `legacy_session_id` with the same length, but with all zeros? Presumably you mean the former?",
               "createdAt": "2020-10-12T22:16:33Z",
-              "updatedAt": "2020-10-14T20:33:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28685,7 +28685,7 @@
               "originalPosition": 64,
               "body": "Oh I probably was just unclear in that discussion. I never preferred the zeros formulation. :-) That was more me musing on how annoying it would be if there were another reason to prefer it. I like this better because, as you say, it's simpler.",
               "createdAt": "2020-10-12T23:11:47Z",
-              "updatedAt": "2020-10-14T20:33:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28705,7 +28705,7 @@
               "originalPosition": 57,
               "body": "(Will deal with uploading a new revision after base PRs go through, since Github makes a mess of these.)\r\n\r\nWorks for me, though it's unclear to me how much we like sticking identifiers in section titles, which is why I used the words instead. E.g. RFC8446's section titles say things like \"Supported Versions\" and this document had \"Incorporating Outer Extensions\" rather than \"outer_extensions\". Although, admittedly, \"ClientHello\" is itself an identifier, but I figured it was a more established one (elsewhere we have \"Sending an encrypted ClientHello\").\r\n\r\n\u00af\\\\\\_(\u30c4)_/\u00af",
               "createdAt": "2020-10-13T16:17:13Z",
-              "updatedAt": "2020-10-14T20:33:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28725,7 +28725,7 @@
               "originalPosition": 57,
               "body": "Oh, and we have \"Outer ClientHello\" as a section title down in Security Considerations, though I suppose that too is my fault. :-)",
               "createdAt": "2020-10-13T16:18:17Z",
-              "updatedAt": "2020-10-14T20:33:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28745,7 +28745,7 @@
               "originalPosition": 5,
               "body": "```suggestion\r\n## Encoding ClientHelloInner {#encoding-inner-clienthello}\r\n```",
               "createdAt": "2020-10-14T20:11:29Z",
-              "updatedAt": "2020-10-14T20:33:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28765,7 +28765,7 @@
               "originalPosition": 68,
               "body": "```suggestion\r\n## Authenticating ClientHelloOuter {#authenticating-outer-clienthello}\r\n```",
               "createdAt": "2020-10-14T20:12:15Z",
-              "updatedAt": "2020-10-14T20:33:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28785,7 +28785,7 @@
               "originalPosition": 64,
               "body": "Done. Though I used HPKE encryption since it looks like the rest of the document mostly refers to HPKE rather than the internal AEAD.",
               "createdAt": "2020-10-14T20:34:39Z",
-              "updatedAt": "2020-10-14T20:34:39Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28805,7 +28805,7 @@
               "originalPosition": 57,
               "body": "Done.",
               "createdAt": "2020-10-14T20:34:57Z",
-              "updatedAt": "2020-10-14T20:34:57Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28825,7 +28825,7 @@
               "originalPosition": 5,
               "body": "Done.",
               "createdAt": "2020-10-14T20:35:03Z",
-              "updatedAt": "2020-10-14T20:35:03Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28845,7 +28845,7 @@
               "originalPosition": 21,
               "body": "Reworded to be clearer.",
               "createdAt": "2020-10-14T20:35:19Z",
-              "updatedAt": "2020-10-14T20:35:19Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28865,7 +28865,7 @@
               "originalPosition": 5,
               "body": "Applied manually since I needed to rebase.",
               "createdAt": "2020-10-14T20:35:51Z",
-              "updatedAt": "2020-10-14T20:35:52Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -28885,7 +28885,7 @@
               "originalPosition": 68,
               "body": "Applied manually since I needed to rebase.",
               "createdAt": "2020-10-14T20:35:58Z",
-              "updatedAt": "2020-10-14T20:35:59Z"
+              "updatedAt": "2020-10-16T15:25:49Z"
             }
           ]
         },
@@ -29046,25 +29046,35 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NTAzNzA4MTI5",
       "title": "Clarify client-facing server HRR behavior",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/339",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "cjpatton",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Closes #325.",
       "createdAt": "2020-10-14T23:22:28Z",
-      "updatedAt": "2020-10-15T17:31:47Z",
+      "updatedAt": "2020-10-16T15:29:12Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "f9eb1a5b40b3c5770b2350b499623e659286f251",
       "headRepository": "cjpatton/draft-ietf-tls-esni",
       "headRefName": "more-hrr-behavior",
-      "headRefOid": "588695684b3c7155cac480260ef77028c5663387",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "headRefOid": "418065c62ea780260f98d3296010f9f94b785b5a",
+      "closedAt": "2020-10-16T15:29:12Z",
+      "mergedAt": "2020-10-16T15:29:11Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "a5bbe40119ebab9a12718811ba0c8120f22adc26"
+      },
+      "comments": [
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "A related PR that we probably should make sure flow together: https://github.com/tlswg/draft-ietf-tls-esni/pull/341",
+          "createdAt": "2020-10-15T19:19:23Z",
+          "updatedAt": "2020-10-15T19:19:23Z"
+        }
+      ],
       "reviews": [
         {
           "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA5NjA0NzY1",
@@ -29082,21 +29092,94 @@
               "originalPosition": 23,
               "body": "I found this a little hard to interpret. It suggests equality of the ClientHellos themselves, which isn't what we want. It's also a little odd since CH1' and CH2' are functions of both what the client sent and what the server chose to do what in response. But it would be less enforcing an invariant on the latter and more maintaining it. WDYT about:\r\n\r\n> In case a HelloRetryRequest (HRR) is sent, the client-facing server MUST consistently accept or decline ECH between the two ClientHellos, using the same ECHConfig, and fail the handshake if this is not possible. This is achieved as follows.",
               "createdAt": "2020-10-15T17:21:11Z",
-              "updatedAt": "2020-10-15T17:31:47Z"
+              "updatedAt": "2020-10-15T22:52:09Z"
             },
             {
               "originalPosition": 36,
               "body": "Nit: I don't think we need to add well-formed ClientECH structure to the precondition. The client-facing server is should already fail the connection with a decode_error if the extension doesn't parse.",
               "createdAt": "2020-10-15T17:22:24Z",
-              "updatedAt": "2020-10-15T17:31:47Z"
+              "updatedAt": "2020-10-15T22:52:09Z"
             },
             {
               "originalPosition": 38,
               "body": "Does the server need to check the config identifier if it declines ECH, or just if it accepts ECH? What happens if the client and server use the trial decryption mode, where the config ID is empty and you only determine the config by using it? Perhaps this should be phrased in terms of the ECHConfig used. WDYT about:\r\n\r\n> If the client-facing server accepts ECH in response to CH1, it MUST check that the ClientECH.config_id parameter is the same between CH1 and CH2. If they differ, the server MUST abort the connection with an \"illegal_parameter\" alert. It then MUST decrypt the extension using the previously-selected ECHConfig and, if decryption fails, abort the connection with a \"decrypt_error\" alert. Note that, if the connection used the trial decryption mode with an empty ClientECH.config_id value, the server does not continue to try other configurations on decryption error.\r\n\r\nThough this means, if the server believes in trial decryption, you need to remember *both* the ECHConfig *and* whether to expect an empty or matching config_id value.\r\n\r\n(As an aside, this admits another GREASE-distinguishing active attack, and one I don't see any way of avoiding. But it only applies to connections that would naturally trip HRR.)",
               "createdAt": "2020-10-15T17:31:28Z",
-              "updatedAt": "2020-10-15T17:31:47Z"
+              "updatedAt": "2020-10-15T22:52:09Z"
             }
           ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA5NzAyMTU4",
+          "commit": {
+            "abbreviatedOid": "5886956"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-15T19:30:24Z",
+          "updatedAt": "2020-10-15T19:30:25Z",
+          "comments": [
+            {
+              "originalPosition": 23,
+              "body": "I like it. Replacing my paragraph with yours. (Changed \"fail the handshake\" to \"abort the handshake\".)",
+              "createdAt": "2020-10-15T19:30:25Z",
+              "updatedAt": "2020-10-15T22:52:09Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA5NzA1MzI5",
+          "commit": {
+            "abbreviatedOid": "5886956"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-15T19:34:48Z",
+          "updatedAt": "2020-10-15T19:34:48Z",
+          "comments": [
+            {
+              "originalPosition": 38,
+              "body": "A semi-related change that might make it easier to phrase this paragraph: https://github.com/davidben/draft-ietf-tls-esni/commit/f9b3aaf56b9c759c3ba3ab3dee4f99da34b2e460",
+              "createdAt": "2020-10-15T19:34:48Z",
+              "updatedAt": "2020-10-15T22:52:09Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA5NzE4MzY0",
+          "commit": {
+            "abbreviatedOid": "5886956"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-15T19:47:57Z",
+          "updatedAt": "2020-10-15T19:47:57Z",
+          "comments": [
+            {
+              "originalPosition": 38,
+              "body": "> Does the server need to check the config identifier if it declines ECH, or just if it accepts ECH?\r\n\r\nIt needs to check the config in both cases.\r\n\r\n> What happens if the client and server use the trial decryption mode, where the config ID is empty and you only determine the config by using it?\r\n\r\nI hadn't considered this case. \r\n\r\n> A semi-related change that might make it easier to phrase this paragraph: https://github.com/davidben/draft-ietf-tls-esni/commit/f9b3aaf56b9c759c3ba3ab3dee4f99da34b2e460\r\n\r\nI think this will help. Let's land that PR and then come back to this.\r\n",
+              "createdAt": "2020-10-15T19:47:57Z",
+              "updatedAt": "2020-10-15T22:52:09Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTEwNTc4MDc5",
+          "commit": {
+            "abbreviatedOid": "418065c"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-16T15:28:51Z",
+          "updatedAt": "2020-10-16T15:28:51Z",
+          "comments": []
         }
       ]
     },
@@ -29138,6 +29221,61 @@
           "body": "",
           "createdAt": "2020-10-15T18:48:34Z",
           "updatedAt": "2020-10-15T18:48:34Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 341,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTA0MzIxNzMw",
+      "title": "Fix up description of server message forwarding.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/341",
+      "state": "MERGED",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This fixes a few issues with the  \"Upon determining the true SNI\"\r\nparagraph:\r\n\r\n- It talkes about determining the \"true SNI\", but we should probably\r\n  talk about the ClientHelloInner more generally.\r\n\r\n- It refers to behavior in \"the following section\" which no longer\r\n  matches. This is a remnant of before Shared Mode was described as a\r\n  special case of Split Mode, so remove it.\r\n\r\n- It says the server forwards messages unmodified, which isn't true. It\r\n  needs to forward the decrypted ClientHello. It also needs to process\r\n  HRR.\r\n\r\nI've cited the HRR section for the modified decryption procedure, which\r\ndoesn't really exist right now, but #339 is handling that.",
+      "createdAt": "2020-10-15T19:17:49Z",
+      "updatedAt": "2020-10-15T23:27:52Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "01674f4ac07fd532fd90634701d36db042235875",
+      "headRepository": "davidben/draft-ietf-tls-esni",
+      "headRefName": "fix-forwarding",
+      "headRefOid": "0f0e11b69c9ec3c16cd5c682a3d010845d2085e0",
+      "closedAt": "2020-10-15T23:27:52Z",
+      "mergedAt": "2020-10-15T23:27:52Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "17ac85d3a0a9c4a0bbb93060df0e360ede4dac3c"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA5NzI0NjMx",
+          "commit": {
+            "abbreviatedOid": "0f0e11b"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "Yup, this aligns with my understanding!",
+          "createdAt": "2020-10-15T19:51:28Z",
+          "updatedAt": "2020-10-15T19:51:28Z",
+          "comments": []
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTA5ODc2Mjcz",
+          "commit": {
+            "abbreviatedOid": "0f0e11b"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2020-10-15T23:27:43Z",
+          "updatedAt": "2020-10-15T23:27:43Z",
           "comments": []
         }
       ]
