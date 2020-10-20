@@ -92,7 +92,7 @@ Table of Contents
      10.3.  Client Tracking  . . . . . . . . . . . . . . . . . . . .  25
      10.4.  Optional Configuration Identifiers and Trial
              Decryption  . . . . . . . . . . . . . . . . . . . . . .  25
-     10.5.  Outer ClientHello  . . . . . . . . . . . . . . . . . . .  25
+     10.5.  Outer ClientHello  . . . . . . . . . . . . . . . . . . .  26
      10.6.  Related Privacy Leaks  . . . . . . . . . . . . . . . . .  26
      10.7.  Attacks Exploiting Acceptance Confirmation . . . . . . .  27
      10.8.  Comparison Against Criteria  . . . . . . . . . . . . . .  27
@@ -1138,9 +1138,10 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
    When the client-facing server accepts ECH, it forwards the
    ClientHelloInner to the backend server, who terminates the
-   connection.  If the ClientHelloInner contains an empty
-   "encrypted_client_hello" extension, then the backend server MUST
-   confirm ECH acceptance by setting ServerHello.random[24:32] to
+   connection.  If the backend server negotiates TLS 1.3 or higher and
+   the ClientHelloInner contains an empty "encrypted_client_hello"
+   extension, then the backend server MUST confirm ECH acceptance by
+   setting ServerHello.random[24:32] to
 
        accept_confirmation = HKDF-Expand-Label(
            HKDF-Extract(0, ClientHelloInner.random),
@@ -1152,6 +1153,10 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    invoking a secure random number generator (see [RFC8446],
    Section 4.1.2).
 
+   The backend server MUST NOT perform this operation if it negotiated
+   TLS 1.2 or below.  Note that doing so would overwrite the downgrade
+   signal for TLS 1.3 (see [RFC8446], Section 4.1.3).
+
 8.  Compatibility Issues
 
    Unlike most TLS extensions, placing the SNI value in an ECH extension
@@ -1161,11 +1166,6 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    them.  Additionally, servers SHOULD retain support for any
    previously-advertised keys for the duration of their validity
 
-   However, in more complex deployment scenarios, this may be difficult
-   to fully guarantee.  Thus this protocol was designed to be robust in
-   case of inconsistencies between systems that advertise ECH keys and
-   servers, at the cost of extra round-trips due to a retry.  Two
-   specific scenarios are detailed below.
 
 
 
@@ -1177,6 +1177,12 @@ Rescorla, et al.          Expires 23 April 2021                [Page 21]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
+
+   However, in more complex deployment scenarios, this may be difficult
+   to fully guarantee.  Thus this protocol was designed to be robust in
+   case of inconsistencies between systems that advertise ECH keys and
+   servers, at the cost of extra round-trips due to a retry.  Two
+   specific scenarios are detailed below.
 
 8.1.  Misconfiguration and Deployment Concerns
 
@@ -1217,12 +1223,6 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    failure.  A proxy which is not authoritative for the public name
    cannot forge a signal to disable ECH.
 
-   A non-conformant MITM proxy which instead forwards the ECH extension,
-   substituting its own KeyShare value, will result in the client-facing
-   server recognizing the key, but failing to decrypt the SNI.  This
-   causes a hard failure.  Clients SHOULD NOT attempt to repair the
-   connection in this case.
-
 
 
 
@@ -1233,6 +1233,12 @@ Rescorla, et al.          Expires 23 April 2021                [Page 22]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
+
+   A non-conformant MITM proxy which instead forwards the ECH extension,
+   substituting its own KeyShare value, will result in the client-facing
+   server recognizing the key, but failing to decrypt the SNI.  This
+   causes a hard failure.  Clients SHOULD NOT attempt to repair the
+   connection in this case.
 
 9.  Compliance Requirements
 
@@ -1276,12 +1282,6 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    Client-facing server configuration determines the size of the
    anonymity set.  For example, if a client-facing server uses distinct
    ECHConfig values for each host, then each anonymity set has size k =
-   1.  Client-facing servers SHOULD deploy ECH in such a way so as to
-   maximize the size of the anonymity set where possible.  This means
-   client-facing servers should use the same ECHConfig for as many hosts
-   as possible.  An attacker can distinguish two hosts that have
-   different ECHConfig values based on the ClientECH.config_id value.
-   This also means public information in a TLS handshake is also
 
 
 
@@ -1290,6 +1290,12 @@ Rescorla, et al.          Expires 23 April 2021                [Page 23]
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
 
+   1.  Client-facing servers SHOULD deploy ECH in such a way so as to
+   maximize the size of the anonymity set where possible.  This means
+   client-facing servers should use the same ECHConfig for as many hosts
+   as possible.  An attacker can distinguish two hosts that have
+   different ECHConfig values based on the ClientECH.config_id value.
+   This also means public information in a TLS handshake is also
    consistent across hosts.  For example, if a client-facing server
    services many backend origin hosts, only one of which supports some
    cipher suite, it may be possible to identify that host based on the
@@ -1332,12 +1338,6 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    attacker that controls DNS, no encryption scheme can work because the
    attacker can replace the IP address, thus blocking client
    connections, or substituting a unique IP address which is 1:1 with
-   the DNS name that was looked up (modulo DNS wildcards).  Thus,
-   allowing the ECH records in the clear does not make the situation
-   significantly worse.
-
-
-
 
 
 
@@ -1345,6 +1345,10 @@ Rescorla, et al.          Expires 23 April 2021                [Page 24]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
+
+   the DNS name that was looked up (modulo DNS wildcards).  Thus,
+   allowing the ECH records in the clear does not make the situation
+   significantly worse.
 
    Clearly, DNSSEC (if the client validates and hard fails) is a defense
    against this form of attack, but DoH/DPRIVE are also defenses against
@@ -1386,13 +1390,9 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    implement some form of rate limiting mechanism to limit the damage
    caused by such attacks.
 
-10.5.  Outer ClientHello
 
-   Any information that the client includes in the ClientHelloOuter is
-   visible to passive observers.  The client SHOULD NOT send values in
-   the ClientHelloOuter which would reveal a sensitive ClientHelloInner
-   property, such as the true server name.  It MAY send values
-   associated with the public name in the ClientHelloOuter.
+
+
 
 
 
@@ -1401,6 +1401,14 @@ Rescorla, et al.          Expires 23 April 2021                [Page 25]
 
 Internet-Draft         TLS Encrypted Client Hello           October 2020
 
+
+10.5.  Outer ClientHello
+
+   Any information that the client includes in the ClientHelloOuter is
+   visible to passive observers.  The client SHOULD NOT send values in
+   the ClientHelloOuter which would reveal a sensitive ClientHelloInner
+   property, such as the true server name.  It MAY send values
+   associated with the public name in the ClientHelloOuter.
 
    In particular, some extensions require the client send a server-name-
    specific value in the ClientHello.  These values may reveal
@@ -1442,6 +1450,14 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    specific traffic for additional information sources as part of
    verification.
 
+
+
+
+Rescorla, et al.          Expires 23 April 2021                [Page 26]
+
+Internet-Draft         TLS Encrypted Client Hello           October 2020
+
+
    Implementations SHOULD avoid leaking information that may identify
    the server.  Even when sent over an encrypted transport, such
    requests may result in indirect exposure of the server's identity,
@@ -1450,13 +1466,6 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    possible, such as through the use of OCSP stapling, and clients
    SHOULD take steps to minimize or protect such requests during
    certificate validation.
-
-
-
-Rescorla, et al.          Expires 23 April 2021                [Page 26]
-
-Internet-Draft         TLS Encrypted Client Hello           October 2020
-
 
 10.7.  Attacks Exploiting Acceptance Confirmation
 
@@ -1482,9 +1491,8 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
 
    Note that the same bytes of the ServerHello.random are used to
    implement downgrade protection for TLS 1.3 (see [RFC8446],
-   Section 4.1.3).  The backend server's signal of acceptance does not
-   interfere with this mechanism because ECH is only supported in TLS
-   1.3 or higher.
+   Section 4.1.3).  These mechanisms do not interfere because the
+   backend server only signals ECH acceptance in TLS 1.3 or higher.
 
 10.8.  Comparison Against Criteria
 
@@ -1498,14 +1506,6 @@ Internet-Draft         TLS Encrypted Client Hello           October 2020
    and because ClientHelloInner.random is encrypted, it is not possible
    for an attacker to "cut and paste" the ECH value in a different
    Client Hello and learn information from ClientHelloInner.
-
-
-
-
-
-
-
-
 
 
 
