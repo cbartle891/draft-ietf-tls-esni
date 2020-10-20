@@ -826,7 +826,7 @@ address div.right {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Rescorla, et al.</td>
-<td class="center">Expires 19 April 2021</td>
+<td class="center">Expires 23 April 2021</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -839,12 +839,12 @@ address div.right {
 <dd class="internet-draft">draft-ietf-tls-esni-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2020-10-16" class="published">16 October 2020</time>
+<time datetime="2020-10-20" class="published">20 October 2020</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2021-04-19">19 April 2021</time></dd>
+<dd class="expires"><time datetime="2021-04-23">23 April 2021</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -891,7 +891,7 @@ encrypting a ClientHello message under a server public key.<a href="#section-abs
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 19 April 2021.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 23 April 2021.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1432,7 +1432,7 @@ generating a ClientHello message. These are described below
         <h3 id="name-configuration-extensions">
 <a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-configuration-extensions" class="section-name selfRef">Configuration Extensions</a>
         </h3>
-<p id="section-4.1-1">ECH configuration extensions are used to to provide room for additional
+<p id="section-4.1-1">ECH configuration extensions are used to provide room for additional
 functionality as needed. See <a href="#config-extensions-guidance" class="xref">Section 12</a> for guidance on
 which types of extensions are appropriate for this structure.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.1-2">The format is as defined in <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span>, Section 4.2.
@@ -1608,10 +1608,11 @@ portion of ClientHelloOuter is not incorporated into ClientHelloInner.<a href="#
         </h3>
 <p id="section-6.1-1">To offer ECH, the client first chooses a suitable ECH configuration. To
 determine if a given <code>ECHConfig</code> is suitable, it checks that it supports the KEM
-algorithm identified by <code>ECHConfig.kem_id</code> and at least one KDF/AEAD algorithm
-identified by <code>ECHConfig.cipher_suites</code>. Once a suitable configuration is found,
-the client selects the cipher suite it will use for encryption. It MUST NOT
-choose a cipher suite not advertised by the configuration.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+algorithm identified by <code>ECHConfig.kem_id</code>, at least one KDF/AEAD algorithm
+identified by <code>ECHConfig.cipher_suites</code>, and the version of ECH indicated by
+<code>ECHConfig.version</code>. Once a suitable configuration is found, the client selects
+the cipher suite it will use for encryption. It MUST NOT choose a cipher suite
+or version not advertised by the configuration.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
 <p id="section-6.1-2">Next, the client constructs the ClientHelloInner message just as it does a
 standard ClientHello, with the exception of the following rules:<a href="#section-6.1-2" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-6.1-3">
@@ -1773,13 +1774,14 @@ the calling application. It MUST NOT use the retry keys.<a href="#section-6.3.2-
 authenticated, the client MUST abort the connection with an "ech_required"
 alert. It then processes the "retry_configs" field from the server's
 "encrypted_client_hello" extension.<a href="#section-6.3.2-2" class="pilcrow">¶</a></p>
-<p id="section-6.3.2-3">If one of the values contains a version supported by the client, it can regard
-the ECH keys as securely replaced by the server. It SHOULD retry the handshake
-with a new transport connection, using that value to encrypt the ClientHello.
-The value may only be applied to the retry connection. The client MUST continue
-to use the previously-advertised keys for subsequent connections. This avoids
-introducing pinning concerns or a tracking vector, should a malicious server
-present client-specific retry keys to identify clients.<a href="#section-6.3.2-3" class="pilcrow">¶</a></p>
+<p id="section-6.3.2-3">If at least one of the values contains a version supported by the client, it can
+regard the ECH keys as securely replaced by the server. It SHOULD retry the
+handshake with a new transport connection, using the retry configurations
+supplied by the server. The retry configurations may only be applied to the
+retry connection. The client MUST continue to use the previously-advertised
+configurations for subsequent connections. This avoids introducing pinning
+concerns or a tracking vector, should a malicious server present client-specific
+retry keys to identify clients.<a href="#section-6.3.2-3" class="pilcrow">¶</a></p>
 <p id="section-6.3.2-4">If none of the values provided in "retry_configs" contains a supported version,
 the client can regard ECH as securely disabled by the server. As below, it
 SHOULD then retry the handshake with a new transport connection and ECH
@@ -1894,9 +1896,9 @@ secret? Analysis needed.]]<a href="#section-6.3.3-9" class="pilcrow">¶</a></p>
 structure available for the server, it SHOULD send a GREASE <span>[<a href="#RFC8701" class="xref">RFC8701</a>]</span>
 "encrypted_client_hello" extension as follows:<a href="#section-6.4-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-6.4-2.1">Set the "suite" field to a supported ECHCipherSuite. The selection SHOULD
-vary to exercise all supported configurations, but MAY be held constant for
-successive connections to the same server in the same session.<a href="#section-6.4-2.1" class="pilcrow">¶</a>
+<li class="normal" id="section-6.4-2.1">Set the "cipher_suite" field to a supported ECHCipherSuite. The selection
+SHOULD vary to exercise all supported configurations, but MAY be held constant
+for successive connections to the same server in the same session.<a href="#section-6.4-2.1" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-6.4-2.2">Set the "config_id" field to a randomly-generated string of <code>Nh</code> bytes,
 where <code>Nh</code> is the output length of the <code>Extract</code> function of the KDF
@@ -1907,9 +1909,9 @@ associated with the chosen cipher suite. (The KDF API is specified in
 output by the HPKE KEM.<a href="#section-6.4-2.3" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-6.4-2.4">Set the "payload" field to a randomly-generated string of L+C bytes, where C
-is the ciphertext expansion of selected AEAD scheme and L is the size of the
-ClientHelloInner message the client would use given an ECHConfig structure,
-padded according to <a href="#padding" class="xref">Section 6.2</a>.<a href="#section-6.4-2.4" class="pilcrow">¶</a>
+is the ciphertext expansion of the selected AEAD scheme and L is the size of
+the EncodedClientHelloInner the client would compute when offering ECH, padded
+according to <a href="#padding" class="xref">Section 6.2</a>.<a href="#section-6.4-2.4" class="pilcrow">¶</a>
 </li>
         </ul>
 <p id="section-6.4-3">If the server sends an "encrypted_client_hello" extension, the client MUST check
@@ -1979,7 +1981,7 @@ concatenation "tls ech", a zero byte, and the serialized ECHConfig. If
 decryption fails, the server continues to the next candidate ECHConfig.
 Otherwise, the server reconstructs ClientHelloInner from
 EncodedClientHelloInner, as described in <a href="#encoding-inner" class="xref">Section 5.1</a>. It then stops
-consider candidate ECHConfigs.<a href="#section-7.1-9" class="pilcrow">¶</a></p>
+considering candidate ECHConfigs.<a href="#section-7.1-9" class="pilcrow">¶</a></p>
 <p id="section-7.1-10">Upon determining the ClientHelloInner, the client-facing server then forwards
 the ClientHelloInner to the appropriate backend server, which proceeds as in
 <a href="#backend-server-behavior" class="xref">Section 7.2</a>. If the backend server responds with a
