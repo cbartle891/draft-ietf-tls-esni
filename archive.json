@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2020-10-20T22:16:20.479732+00:00",
+  "timestamp": "2020-10-22T00:52:19.841244+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -7883,7 +7883,7 @@
       "labels": [],
       "body": "It is unclear how a general TLS server is supposed to react to an ECH extension. It's sometimes empty and sometimes a ClientECH. An empty extension is not a valid ClientECH extension, so a server expending ClientECH should produce a `decode_error` (and vice versa).\r\n\r\nThe spec does talk about client-facing and backend servers as separate kinds of servers, but I thought the theory behind Split Mode was that backend servers were meant to be mostly standard TLS servers. That would suggest that backend-server-specific logic should be common to all TLS server implementations that know about ECH. In that case, perhaps we should say that:\r\n\r\n* The client ECH extension is either empty or a ClientECH structure.\r\n* If you see empty, this is an inner ClientHello. Do the ServerHello.random thing and otherwise handshake normally.\r\n* If you see non-empty and have ECHConfigs, parse as a ClientECH and decode_error on parse failure as usual. Do the client-facing server thing.\r\n\r\nOr is the idea that client-facing and backend servers are completely separate beasts and everyone always knows which they are? In that case, what happens if a client-facing server sees an empty ECH extension? What happens if a backend server sees a ClientECH-carrying ECH extension. Failure to parse an extension is normally fatal, but the two categories of server believe different parses are valid. In particular, this requires a backend server *never* see a general-purpose client connection, since it'd get confused by (possibly GREASE) ClientECH extensions.",
       "createdAt": "2020-10-19T21:10:47Z",
-      "updatedAt": "2020-10-20T00:37:53Z",
+      "updatedAt": "2020-10-21T16:35:29Z",
       "closedAt": null,
       "comments": [
         {
@@ -7899,6 +7899,86 @@
           "body": "Yeah, sounds like you and I are on the same page there. But I'm not sure the spec text actually supports that interpretation. Let's fix that.",
           "createdAt": "2020-10-20T00:37:53Z",
           "updatedAt": "2020-10-20T00:37:53Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Agreed. Who wants to take the PR?",
+          "createdAt": "2020-10-20T22:20:45Z",
+          "updatedAt": "2020-10-20T22:20:45Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I'd be happy to take it, since David did a lot of the heavy lifting last week. Unless you want to take a crack at it, David?",
+          "createdAt": "2020-10-20T23:18:50Z",
+          "updatedAt": "2020-10-20T23:18:50Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I'm working on a PR.",
+          "createdAt": "2020-10-21T15:49:47Z",
+          "updatedAt": "2020-10-21T15:49:47Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "PR ready. Note that it also clarifies how the client's role (real or GREASE) is determined.",
+          "createdAt": "2020-10-21T16:35:29Z",
+          "updatedAt": "2020-10-21T16:35:29Z"
+        }
+      ]
+    },
+    {
+      "number": 349,
+      "id": "MDU6SXNzdWU3MjYwOTQxMzA=",
+      "title": "Avoid computing a new HPKE contexts on HRR?",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/349",
+      "state": "OPEN",
+      "author": "davidben",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "ECH currently adds an ECDH operation on *both* the first and second ClientHello. That's extra asymmetric operations, and if folks end up offloading those keys, it's two RPCs. Given that we need to bind the two decryptions together anyway, and HPKE supports multiple encrypted messages (it has an internal sequence number), perhaps it's better to just use that.\r\n\r\nHere's a possibility: the first ClientHello makes a new HPKE context and calls context.Seal on it. The second ClientHello simply calls context.Seal on the same context, which internally increments the sequence number. Probably we copy over the first ClientHello's cipher_suite, config_id, and enc, even though they don't really do anything.\r\n\r\nThe server, if stateful, just calls context.Open to mirror the client behavior. If stateless, probably the simplest thing is to pickle the AEAD key inside the cookie. [Edit: I accidentally wrote \"ticket\" earlier.] It probably could also recompute the HPKE context and bump the sequence number up by one, maybe checking the selected ECHConfig and enc values didn't change. (The text already requires checking the former.)",
+      "createdAt": "2020-10-21T03:12:01Z",
+      "updatedAt": "2020-10-22T00:38:06Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "EDITED: s/ticket/cookie/\r\n\r\nI like this suggestion overall. A few comments:\r\n1. It's not sufficient to store only the key in the cookie: minimally we'll need the key and the initialization vector (called \"nonce\" in the HPKE spec, unfortunately). We may also end up needing the exporter secret as well, although this is currently only used in ECH to compute the HRR PSK for `SetupPSKS()` and this call would go away if we decided to adopt this change.\r\n1. In case of ECH acceptance, the backend server stores the key/IV in the cookie. This is a problem for \"Split Mode\": as you previously pointed out, there is currently no way for the client-facing server to convey cookie content to the backend server. Perhaps a solution to #333 is a prerequisite to this?\r\n1. HPKE does not specify serialization of the HPKE context. This use case makes me think it should.",
+          "createdAt": "2020-10-21T16:53:17Z",
+          "updatedAt": "2020-10-21T19:55:28Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "(I think you want to s/ticket/cookie/g since ticket is the resumption thing. That was my bad. I wrote ticket instead of cookie too.)\r\n\r\n> It's not sufficient to store only the key in the ticket:\r\n\r\nGood catch. Yes, we need to store both derived values. Although the difference between storing one short byte string or two short byte strings is largely one of semantics. (You can just as easily concatenate them and store the one resulting short byte string.) You could also store the root secret and rederive it. Whichever.\r\n\r\n> We may also end up needing the exporter secret as well, although this is currently only used in ECH to compute the HRR PSK for SetupPSKS() and this call would go away if we decided to adopt this change.\r\n\r\nWe wouldn't need the exporter secret or SetupPSK in this design.\r\n\r\n> In case of ECH acceptance, the backend server stores the key/IV in the ticket. [...] Perhaps a solution to #333 is a prerequisite to this?\r\n\r\nI don't think this introduces a new problem, so there's no need to block on #333. Though we need to deal with that too. In both this design and the status quo, the client-facing server needs to either be stateful or store *something* secret in the cookie. Right now it's ech_hrr_key. In this design it's the key/IV. (Though this design introduces the alternate strategy of storing a less secret thing, where you just remember the client's public bits and recompute the HPKE context.)\r\n\r\n> HPKE does not specify serialization of the HPKE context. This use case makes me think it should.\r\n\r\nThe serialization doesn't need to be standard or anything. A TLS server might want to keep its cookie small by observing it doesn't need the exporter secret. But some guidance might be useful, sure.\r\n\r\n(The only thing that needs to consume the cookie is the server, who also produced it. Just as TLS doesn't (and shouldn't) specify session state serialization, yet every TLS implementation has a session state serialization. I could also implement TLS by, rather than keeping connection state in memory, write it to disk and read it back out on every packet. Even an in-memory representation is a serialization.)",
+          "createdAt": "2020-10-21T17:11:31Z",
+          "updatedAt": "2020-10-21T17:11:31Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This is an interesting consideration. On one hand, I agree that it's simpler to simply reuse the existing context, though on the other hand it seems to run against the general desire to use primarily CH2 for \"everything.\" That said, ECH annoyingly requires binding between the two CHs, which we currently address by tying them together with a PSK, and this proposal is arguably simpler. \r\n\r\n(Anecdotally, I recall some server stacks verifying PSK binders on CH1 and then ignoring them on CH2, which was a situation that wasn't carefully analyzed in the formal analyses. I think that was fixed, though I don't recall how: are binders verified for both CHs, or only for the latter? And if verifying a binder involves a public key operation, why would ECH be any different?)",
+          "createdAt": "2020-10-21T23:54:20Z",
+          "updatedAt": "2020-10-21T23:54:20Z"
+        },
+        {
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "The \"use CH2 for everything\" theory mostly assumes you don't negotiate very many parameters on CH1, whereas you need to resolve ECH early to even get at CH1. And, as you note, we need to bind the two. So I think we're pretty stuck with having ECH resolved at CH1 rather than CH2 anyway.\r\n\r\nVerifying a binder doesn't require a public key operation. It's mostly an HMAC. If you resolved the PSK at CH1, you've got the PSK available for CH2 and can compute the binder easily enough. If you resolved the PSK at CH2[*], then you just do it normally.\r\n\r\n[*] As an aside, you only sort of are able to do this. If your stack implements psk_ke, which thankfully most folks didn't, you need to resolve PSK at CH1 to know if you need a key share at all. Whereas if you know you only support psk_dhe_ke, then you can proceed assuming you need a key share and defer sorting out the PSK to later.",
+          "createdAt": "2020-10-22T00:17:37Z",
+          "updatedAt": "2020-10-22T00:17:37Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> The \"use CH2 for everything\" theory mostly assumes you don't negotiate very many parameters on CH1, whereas you need to resolve ECH early to even get at CH1. And, as you note, we need to bind the two. So I think we're pretty stuck with having ECH resolved at CH1 rather than CH2 anyway.\r\n\r\nYeah, I think that's right.\r\n\r\n> Verifying a binder doesn't require a public key operation. It's mostly an HMAC. If you resolved the PSK at CH1, you've got the PSK available for CH2 and can compute the binder easily enough. If you resolved the PSK at CH2[*], then you just do it normally.\r\n\r\nWhat if the key is inside a ticket? Doesn't that require a public key operation? (I should have clarified that I was referring to the whole process, involving getting the key and then using it to verify the binder. Sorry!)",
+          "createdAt": "2020-10-22T00:38:06Z",
+          "updatedAt": "2020-10-22T00:38:06Z"
         }
       ]
     }
@@ -26752,13 +26832,13 @@
       "labels": [],
       "body": "Closes #233.\r\n\r\nThis is limited to parameters applicable to TLS 1.3 and beyond. For example,\r\nTLS 1.2 ciphersuites may appear in ClientHelloOuter, so long as all TLS 1.3\r\nciphersuites in ClientHelloOuter match that in ClientHelloInner.\r\n\r\ncc @davidben, @cjpatton",
       "createdAt": "2020-09-30T23:25:50Z",
-      "updatedAt": "2020-10-16T17:31:09Z",
+      "updatedAt": "2020-10-22T00:52:13Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
-      "baseRefOid": "a5bbe40119ebab9a12718811ba0c8120f22adc26",
+      "baseRefOid": "6e359b6dcf7e20511cf28052005151fc804037d2",
       "headRepository": "tlswg/draft-ietf-tls-esni",
       "headRefName": "caw/require-hrr-match",
-      "headRefOid": "ef01697c6d2cd47356e245a5243e56bd762a4d6f",
+      "headRefOid": "aeb1618437b0fb57a13d8b99fc8a8adcb6b17f9e",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -26781,7 +26861,7 @@
               "originalPosition": 3,
               "body": "An editorial suggestion: I would have the bullet simply read \"It MUST ensure that all HelloRetryRequest-sensitive parameters applicable to TLS 1.3 and higher versions in ClientHelloInner match that in ClientHelloOuter. See {{hrr}} for the list of these parameters.\" and I would enumerate the HRR-sensitive parameters in {{hrr}}. Moreover, this change likely impacts the text in {{hrr}}.",
               "createdAt": "2020-10-01T00:15:09Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -26801,7 +26881,7 @@
               "originalPosition": 3,
               "body": "Should be done!",
               "createdAt": "2020-10-01T16:55:46Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -26821,7 +26901,7 @@
               "originalPosition": 19,
               "body": "s/and/or",
               "createdAt": "2020-10-01T17:07:13Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -26841,13 +26921,13 @@
               "originalPosition": 22,
               "body": "supported_versions itself is also HRR-sensitive, but the matching rule is a little weird. The HRR specifies the TLS version (suppose 1.4, 1.5, and 1.6 exist and all have HRR), so if the client preferences are different between the two, things will break.",
               "createdAt": "2020-10-01T16:58:51Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             },
             {
               "originalPosition": 17,
               "body": "Suppose a server decrypts ClientHelloOuter and sees that its parameters differ from ClientHelloInner. Should it reject the connection or continue because we don't want the server to bother looking at the other ClientHello very much?\r\n\r\nI ask because it occurred to me we might want to extend this in the future where the client doesn't care about the ClientHelloOuter and retry case. This is disastrous from a recoverability perspective, but if it's a predictive connection or has some other fallback available already, maybe that's fine. In that case, the ClientHelloOuter only needs to be the bare minimum to pass syntactically.\r\n\r\nI think we can freely specify that later, so it doesn't really matter whether this is a SHOULD or MUST on the client, but the server behavior would constrain this.",
               "createdAt": "2020-10-01T17:10:10Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -26867,7 +26947,7 @@
               "originalPosition": 17,
               "body": "Yeah, I think leaving this as a MUST for now and possibly relaxing later is fine, provided we don't constrain ourselves by forcing a server-side check here. So, let's leave this as is?",
               "createdAt": "2020-10-01T22:07:07Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -26887,7 +26967,7 @@
               "originalPosition": 22,
               "body": "I added \"supported_versions\" to the list!",
               "createdAt": "2020-10-01T22:09:38Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -26907,7 +26987,7 @@
               "originalPosition": 22,
               "body": "Sorry, I should have been clearer. So the reason supported_versions is a huge headache is that it *doesn't* match between the inner and outer. The inner ClientHello is forbidden from offering TLS 1.2, while the outer one may still offer it. I think the rule is something like they need to match, after you drop 1.0-1.2 from the outer list, which is weird.",
               "createdAt": "2020-10-02T20:57:43Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -26927,7 +27007,7 @@
               "originalPosition": 22,
               "body": "Yeah, I figured this was covered by saying these are \"parameters applicable to TLS 1.3 or higher\". Do you not think that's enough? If not, would you mind proposing text to clarify?",
               "createdAt": "2020-10-02T21:03:00Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -26947,7 +27027,7 @@
               "originalPosition": 22,
               "body": "Ah I see. Yeah, I didn't interpret that to apply to the individual details like that. Do you think this would be clearer?\r\n\r\n> 1. TLS 1.3 {{!RFC8446}} ciphersuites in the ClientHello.cipher_suites list\r\n> 1. The \"key_share\" and \"supported_groups\" extensions\r\n{{RFC8446}}. (These extensions may be copied from ClientHelloOuter into\r\nClientHelloInner as described in {{send-ech}}.)\r\n> 1. Versions in the \"supported_versions\" extension, excluding TLS 1.2 and earlier. Note the ClientHelloOuter MAY include these older versions, while the ClientHelloInner MUST omit them.",
               "createdAt": "2020-10-02T21:34:57Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -26967,7 +27047,7 @@
               "originalPosition": 22,
               "body": "Yep, that is more clear! ",
               "createdAt": "2020-10-02T22:29:40Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -26987,7 +27067,7 @@
               "originalPosition": 7,
               "body": "\"non-ECH PSK\": does this term still exist? I know we talked about this already but I forgot where we landed :)",
               "createdAt": "2020-10-02T23:32:22Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -27007,7 +27087,7 @@
               "originalPosition": 7,
               "body": "It's addressed in another PR.",
               "createdAt": "2020-10-02T23:40:01Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -27027,19 +27107,19 @@
               "originalPosition": 4,
               "body": "Does HRR-sensitive mean \"all extensions or parameters that might change in response to receiving HRR\"?  If it does, then maybe say that.",
               "createdAt": "2020-10-06T03:48:40Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             },
             {
               "originalPosition": 28,
               "body": "Isn't the primary consideration whether they might change between subsequent ClientHellos?  That these might cause a server to send HelloRetryRequest is merely consequential.",
               "createdAt": "2020-10-06T03:51:05Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             },
             {
               "originalPosition": 17,
               "body": "This connects parameters that might change in response to HRR to whether they appear inside or outside.  This assumes that they appear in both places (and that they are the same).\r\n\r\nThere's an implicit constraint here that probably needs to be explicit: HelloRetryRequest can only be sent to affect a change in a ClientHello that affects key negotiation.  This is recognizing a new constraint on the design that was essentially always true, but not mandatory.  In principle, prior to this, HRR could affect a new extension that didn't affect key negotiation.\r\n\r\nConveniently, we already have a proxy for that.  Extensions that are CH/SH (as opposed to CH/EE) are those that HRR can change.  In theory there could be some that appear in CH alone, but that is unlikely to be true for a new extension given our systemic rejection of trial decryption.\r\n\r\nThis should probably be reflected somewhere, probably by updating RFC 8446.",
               "createdAt": "2020-10-06T04:01:35Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -27059,7 +27139,7 @@
               "originalPosition": 28,
               "body": "We could rewrite this as, \"Future extensions that might change across first and second ClientHello messages in response to a HelloRetryRequest MUST match,\" as you suggest.",
               "createdAt": "2020-10-06T13:33:32Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -27079,7 +27159,7 @@
               "originalPosition": 4,
               "body": "That seems like an improvement, yeah. I'll take it.",
               "createdAt": "2020-10-06T13:33:48Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -27099,7 +27179,7 @@
               "originalPosition": 17,
               "body": "I agree with the above, but it's not clear to me what specifically you're suggesting. The *intent* of this change is to encompass any CH/SH extension that might change due to HRR, and we refer to those as \"HRR-sensitive\" parameters. \r\n\r\nCan you please clarify what specifically what you're looking for, ideally with suggested text?\r\n\r\n> This should probably be reflected somewhere, probably by updating RFC 8446.\r\n\r\nI don't think this needs to update RFC8446. The HRR language in that document is somewhat unclear as-is, so it probably makes more sense to tackle this in rfc8446-bis.",
               "createdAt": "2020-10-06T13:39:25Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -27119,13 +27199,13 @@
               "originalPosition": 4,
               "body": "Is it parameters that would change in response to HRR, or parameters that would change which HRRs you accept? The latter captures the issue a bit more directly, since the issue is a goofy mechanical one of needing to process an HRR for two ClientHellos concurrently, and the error cases being a mess. (If the HRR matches inner but not outer, how do you construct a new outer ClientHello?)\r\n\r\nAlso a strict reading of \"parameters that might change in response to receiving HRR\" would include PSKs, which isn't what we want. RFC8446 has this odd corner case:\r\nhttps://tools.ietf.org/html/rfc8446#section-4.1.2\r\n\r\n>  -  Updating the \"pre_shared_key\" extension if present by recomputing\r\n>      the \"obfuscated_ticket_age\" and binder values and (optionally)\r\n>      removing any PSKs which are incompatible with the server's\r\n>      indicated cipher suite.\r\n\r\n(This was to save clients from recomputing binders for a hash they aren't using. Something something crypto agility is a headache.)\r\n\r\nA strict reading would also exclude cipher suite preferences, since the client doesn't change them on HRR, even though the server has already committed to one.",
               "createdAt": "2020-10-13T19:47:37Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             },
             {
               "originalPosition": 28,
               "body": "Per comment above, perhaps \"Future extensions that influence the set of HelloRetryRequest values that the clients would accept\"? Though that is definitely kinda weird to say. :-/",
               "createdAt": "2020-10-13T19:55:43Z",
-              "updatedAt": "2020-10-16T15:33:21Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             }
           ]
         },
@@ -27145,37 +27225,77 @@
               "originalPosition": 6,
               "body": "```suggestion\r\n   ClientHelloOuter. See {{client-hrr}} for the list of these parameters.\r\n```",
               "createdAt": "2020-10-16T15:48:30Z",
-              "updatedAt": "2020-10-16T16:28:48Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             },
             {
               "originalPosition": 16,
               "body": "Grammar suggestion: \"parameters of the ClientHelloInner that are applicable to TLS 1.3 or higher match those of the ClientHelloOuter.\"",
               "createdAt": "2020-10-16T15:51:50Z",
-              "updatedAt": "2020-10-16T16:28:48Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             },
             {
               "originalPosition": 17,
               "body": "The server doesn't enforce this MUST, as far as I can tell. For context, note that #339 merely requires that the server checks ECH usage doesn't change across HRR.",
               "createdAt": "2020-10-16T16:10:35Z",
-              "updatedAt": "2020-10-16T16:28:48Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             },
             {
               "originalPosition": 21,
               "body": "Does this text allow implementations to use different DH key shares? E.g., `g^x` in ClientHelloInner and `g^y` in ClientHelloOuter, where `g` is the generator of the group?",
               "createdAt": "2020-10-16T16:22:21Z",
-              "updatedAt": "2020-10-16T16:28:48Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             },
             {
               "originalPosition": 28,
               "body": "Maybe we should be more upfront about this? In particular, we could mention this prior to listing the known HRR-senstive parameters. That would prompt the reader to realize that ECH interacts with future changes to HRR.",
               "createdAt": "2020-10-16T16:27:00Z",
-              "updatedAt": "2020-10-16T16:28:48Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
             },
             {
               "originalPosition": 17,
               "body": "I think @martinthomson's point is that this PR is overly prescriptive about the semantics of HRR? If so, I disagree. It aims to address HRR-sensitive parameters that are known today, but there's line about how to address future changes to the HRR code path. Maybe we should be more upfront about this.",
               "createdAt": "2020-10-16T16:27:04Z",
-              "updatedAt": "2020-10-16T16:28:48Z"
+              "updatedAt": "2020-10-22T00:51:52Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTE0Mjg3MzAx",
+          "commit": {
+            "abbreviatedOid": "99e2965"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-22T00:50:44Z",
+          "updatedAt": "2020-10-22T00:50:44Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "No, I think that's the point. ",
+              "createdAt": "2020-10-22T00:50:44Z",
+              "updatedAt": "2020-10-22T00:51:52Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTE0Mjg3ODEx",
+          "commit": {
+            "abbreviatedOid": "aeb1618"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-22T00:52:13Z",
+          "updatedAt": "2020-10-22T00:52:13Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "I rewrote per my suggestion above, based on MT's comment. Please have a look, @martinthomson!",
+              "createdAt": "2020-10-22T00:52:13Z",
+              "updatedAt": "2020-10-22T00:52:13Z"
             }
           ]
         }
@@ -30219,6 +30339,113 @@
           "createdAt": "2020-10-20T22:15:16Z",
           "updatedAt": "2020-10-20T22:15:16Z",
           "comments": []
+        }
+      ]
+    },
+    {
+      "number": 350,
+      "id": "MDExOlB1bGxSZXF1ZXN0NTA3NzAwODU3",
+      "title": "Clarify client and server roles",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/350",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #348.\r\n\r\nWhether the client offers ECH or sends GREASE ECH depends on whether it\r\ncan find a suitable ECH config. Whether the server acts like the\r\nclient-facing server or the backend server depends on whether it has\r\ncustody of a set of ECH configs. This change clarifies these decision\r\nmaking processes.\r\n\r\nAs a bonus, this change also cleans up the section titles and levels a bit.",
+      "createdAt": "2020-10-21T16:34:41Z",
+      "updatedAt": "2020-10-21T19:54:28Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "6e359b6dcf7e20511cf28052005151fc804037d2",
+      "headRepository": "cjpatton/draft-ietf-tls-esni",
+      "headRefName": "client-server-roles",
+      "headRefOid": "1fb104527114b3e543425bf7ccefe5f62cf84e45",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "{{encrypted-client-hello}} now stipulates that the ECH payload may be empty.",
+          "createdAt": "2020-10-21T19:01:42Z",
+          "updatedAt": "2020-10-21T19:01:42Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTE0MDI4Njk2",
+          "commit": {
+            "abbreviatedOid": "32dc3ee"
+          },
+          "author": "davidben",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "This PR is good, but I don't think it fully addresses the issue. *Syntactically* the spec doesn't even support the behavior we want. I think we should say when defining the extension that it can be *either* empty or a ClientECH structure, and then define handling for both. Otherwise we'll trip decode_errors before we get far enough.",
+          "createdAt": "2020-10-21T17:52:28Z",
+          "updatedAt": "2020-10-21T18:00:32Z",
+          "comments": [
+            {
+              "originalPosition": 96,
+              "body": "Nit: To be less opinionated as to purpose (I see it as a general anti-ossification strategy), perhaps:\r\n\r\nClients doing the latter do not offer to negotiate ECH. Instead, they send a dummy ECH extension to reduce ossification in the ecosystem.",
+              "createdAt": "2020-10-21T17:52:28Z",
+              "updatedAt": "2020-10-21T19:00:49Z"
+            },
+            {
+              "originalPosition": 109,
+              "body": "s/If not/If no/",
+              "createdAt": "2020-10-21T17:53:03Z",
+              "updatedAt": "2020-10-21T19:00:49Z"
+            },
+            {
+              "originalPosition": 177,
+              "body": "Not sure the last two sentences are right. Even if it has ECH configs, it might still act as a backend server if it sees an empty ECH extension (which we need text for).",
+              "createdAt": "2020-10-21T17:58:26Z",
+              "updatedAt": "2020-10-21T19:00:49Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTE0MDg2MTU0",
+          "commit": {
+            "abbreviatedOid": "32dc3ee"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-21T18:56:22Z",
+          "updatedAt": "2020-10-21T18:56:23Z",
+          "comments": [
+            {
+              "originalPosition": 96,
+              "body": "Yours is also opinionated, I think. Changed to: \"Clients of the latter type do not negotiate ECH. Instead, they generate a dummy ECH extension that is ignored by the server.\"",
+              "createdAt": "2020-10-21T18:56:22Z",
+              "updatedAt": "2020-10-21T19:00:49Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NTE0MDg5NTg2",
+          "commit": {
+            "abbreviatedOid": "32dc3ee"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2020-10-21T19:00:06Z",
+          "updatedAt": "2020-10-21T19:00:07Z",
+          "comments": [
+            {
+              "originalPosition": 177,
+              "body": "The first paragraph of {{client-facing-server}} says the client-facing server behaves as described in {{backend-server}} if the ECH extension is empty.",
+              "createdAt": "2020-10-21T19:00:07Z",
+              "updatedAt": "2020-10-21T19:00:49Z"
+            }
+          ]
         }
       ]
     }
